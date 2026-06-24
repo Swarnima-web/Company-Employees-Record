@@ -187,6 +187,8 @@ const Modals = {
   open: (modalId) => {
     const modal = document.getElementById(modalId);
     if (modal) {
+      const content = modal.querySelector('.modal-content');
+      if (content) content.style.transform = ''; // reset offset position
       modal.classList.remove('hidden');
       setTimeout(() => modal.classList.add('show'), 10);
     }
@@ -205,6 +207,86 @@ const Modals = {
     });
   }
 };
+
+// Touch/Mouse Draggable Modal functionality
+function makeModalsDraggable() {
+  document.querySelectorAll('.modal-backdrop').forEach(modalBackdrop => {
+    const modalContent = modalBackdrop.querySelector('.modal-content');
+    const modalHeader = modalBackdrop.querySelector('.modal-header');
+    
+    if (!modalContent || !modalHeader) return;
+    
+    modalHeader.style.cursor = 'move';
+    modalHeader.addEventListener('mousedown', startDrag);
+    modalHeader.addEventListener('touchstart', startDrag, { passive: false });
+    
+    function startDrag(e) {
+      // Ignore click on close buttons or nested elements
+      if (e.target.closest('button') || e.target.closest('.modal-close-btn') || e.target.closest('i')) {
+        return;
+      }
+      
+      e.preventDefault();
+      
+      let startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+      let startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+      
+      // Calculate current offset or default
+      let transform = window.getComputedStyle(modalContent).transform;
+      let translateX = 0;
+      let translateY = 0;
+      
+      if (transform && transform !== 'none') {
+        const matrix = new DOMMatrixReadOnly(transform);
+        translateX = matrix.m41;
+        translateY = matrix.m42;
+      }
+      
+      function moveDrag(moveEvent) {
+        moveEvent.preventDefault();
+        
+        let clientX = moveEvent.type === 'touchmove' ? moveEvent.touches[0].clientX : moveEvent.clientX;
+        let clientY = moveEvent.type === 'touchmove' ? moveEvent.touches[0].clientY : moveEvent.clientY;
+        
+        let dx = clientX - startX;
+        let dy = clientY - startY;
+        
+        let newTranslateX = translateX + dx;
+        let newTranslateY = translateY + dy;
+        
+        // Prevent modal from dragging completely offscreen
+        const modalRect = modalContent.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        const currentLeft = modalRect.left - translateX;
+        const currentTop = modalRect.top - translateY;
+        
+        const minTranslateX = -currentLeft;
+        const maxTranslateX = viewportWidth - currentLeft - modalRect.width;
+        const minTranslateY = -currentTop;
+        const maxTranslateY = viewportHeight - currentTop - modalRect.height;
+        
+        newTranslateX = Math.max(minTranslateX, Math.min(newTranslateX, maxTranslateX));
+        newTranslateY = Math.max(minTranslateY, Math.min(newTranslateY, maxTranslateY));
+        
+        modalContent.style.transform = `translate(${newTranslateX}px, ${newTranslateY}px)`;
+      }
+      
+      function endDrag() {
+        document.removeEventListener('mousemove', moveDrag);
+        document.removeEventListener('mouseup', endDrag);
+        document.removeEventListener('touchmove', moveDrag);
+        document.removeEventListener('touchend', endDrag);
+      }
+      
+      document.addEventListener('mousemove', moveDrag);
+      document.addEventListener('mouseup', endDrag);
+      document.addEventListener('touchmove', moveDrag, { passive: false });
+      document.addEventListener('touchend', endDrag);
+    }
+  });
+}
 
 // ==========================================
 // VIEW RENDERING FUNCTIONS
@@ -368,6 +450,15 @@ async function renderDashboard(container) {
   }
 }
 
+function formatDateToDDMMYYYY(dateStr) {
+  if (!dateStr) return 'N/A';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return dateStr;
+}
+
 // 2. Employees View
 let employeeViewMode = 'grid'; // 'grid' or 'table'
 async function renderEmployees(container) {
@@ -488,6 +579,7 @@ async function renderEmployees(container) {
                   <div class="biodata-item"><i class="fa-solid fa-phone"></i> Phone: ${emp.phone || 'N/A'}</div>
                   <div class="biodata-item"><i class="fa-solid fa-envelope"></i> Email: ${emp.email || 'N/A'}</div>
                   <div class="biodata-item"><i class="fa-solid fa-calendar-day"></i> DOB: ${emp.dob || 'N/A'} (${emp.gender || 'N/A'})</div>
+                  <div class="biodata-item"><i class="fa-solid fa-calendar-check"></i> Joined: ${formatDateToDDMMYYYY(emp.joining_date)}</div>
                   <div class="biodata-item" title="${emp.address || 'N/A'}" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;"><i class="fa-solid fa-map-location-dot"></i> Addr: ${emp.address || 'N/A'}</div>
                 </div>
 
@@ -566,6 +658,7 @@ async function renderEmployees(container) {
                         <span><i class="fa-solid fa-phone"></i> ${emp.phone || 'N/A'}</span>
                         <span><i class="fa-solid fa-envelope"></i> ${emp.email || 'N/A'}</span>
                         <span><i class="fa-solid fa-calendar-day"></i> DOB: ${emp.dob || 'N/A'} (${emp.gender || 'N/A'})</span>
+                        <span><i class="fa-solid fa-calendar-check"></i> Joined: ${formatDateToDDMMYYYY(emp.joining_date)}</span>
                         <span style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><i class="fa-solid fa-map-location-dot"></i> ${emp.address || 'N/A'}</span>
                       </div>
                     </td>
@@ -2031,6 +2124,7 @@ function animateCounters() {
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initSidebar();
+  makeModalsDraggable();
   
   // Bind standard layout elements
   document.getElementById('theme-toggle').addEventListener('click', toggleTheme);

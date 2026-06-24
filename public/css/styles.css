@@ -1434,10 +1434,14 @@ button, input, select, textarea {
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-lg);
   width: 580px;
-  max-width: 90%;
+  max-width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   transform: translateY(-20px);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 .modal-backdrop.show .modal-content {
   transform: translateY(0);
@@ -1470,6 +1474,8 @@ button, input, select, textarea {
 
 .modal-body {
   padding: 24px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modal-footer {
