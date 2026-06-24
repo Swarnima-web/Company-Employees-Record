@@ -535,6 +535,15 @@ button, input, select, textarea {
   padding: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
+.sidebar-footer .btn-outline {
+  color: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+.sidebar-footer .btn-outline:hover {
+  color: #FFFFFF !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
 
 /* Sidebar Collapsed State */
 .sidebar.collapsed {
