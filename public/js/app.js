@@ -155,8 +155,8 @@ function initSidebar() {
     sidebar.classList.toggle('collapsed');
   });
 
-  // Automatically collapse sidebar on smaller screens
-  if (window.innerWidth <= 1024) {
+  // Automatically collapse sidebar on tablet screens, keep hidden on mobile
+  if (window.innerWidth <= 1024 && window.innerWidth > 768) {
     sidebar.classList.add('collapsed');
   }
 }
@@ -1634,7 +1634,27 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const pageId = item.getAttribute('data-page');
       window.location.hash = pageId;
+      
+      // Auto-close sidebar on mobile after navigating
+      if (window.innerWidth <= 768) {
+        document.getElementById('app-sidebar').classList.remove('collapsed');
+      }
     });
+  });
+
+  // Close sidebar clicking outside on mobile
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768) {
+      const sidebar = document.getElementById('app-sidebar');
+      const expandBtn = document.getElementById('sidebar-expand-btn');
+      
+      if (sidebar.classList.contains('collapsed') && 
+          !sidebar.contains(e.target) && 
+          !expandBtn.contains(e.target) && 
+          !e.target.closest('#sidebar-expand-btn')) {
+        sidebar.classList.remove('collapsed');
+      }
+    }
   });
 
   // Hash Navigation Handler (Router trigger)
