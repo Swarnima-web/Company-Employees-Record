@@ -1622,10 +1622,16 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Bind standard layout elements
   document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-  document.getElementById('logout-btn').addEventListener('click', () => {
+  const handleLogoutAction = () => {
     localStorage.removeItem('user');
     showLoginPage();
-  });
+  };
+  document.getElementById('logout-btn').addEventListener('click', handleLogoutAction);
+  
+  const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+  if (mobileLogoutBtn) {
+    mobileLogoutBtn.addEventListener('click', handleLogoutAction);
+  }
 
   // Intercept Form Submit events
   document.getElementById('login-form').addEventListener('submit', handleLogin);
