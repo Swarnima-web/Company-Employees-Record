@@ -160,25 +160,29 @@ const UIComponents = {
 
   // --- Attendance Interactive Calendar ---
   calendar: {
-    render: (containerId, attendanceRecords, employees, onDayClick) => {
+    render: (containerId, attendanceRecords, employees, currentDateStr, onDayClick, onMonthChange) => {
       const div = document.getElementById(containerId);
       if (!div) return;
 
-      // We render June 2026 Calendar
-      const year = 2026;
-      const month = 5; // 0-indexed: June
-      const monthName = 'June 2026';
-
-      // June 1st is a Monday. In a Sun-Sat calendar (Sunday=0, Monday=1):
-      // The start padding is 1 empty day.
-      const startPadding = 1;
-      const totalDays = 30;
+      const dateParts = currentDateStr.split('-');
+      const year = parseInt(dateParts[0]);
+      const month = parseInt(dateParts[1]) - 1; // 0-indexed month
+      
+      const targetDate = new Date(year, month, 1);
+      const monthName = targetDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+      
+      const startPadding = targetDate.getDay(); // Sunday = 0, Monday = 1...
+      const totalDays = new Date(year, month + 1, 0).getDate();
 
       let html = `
         <div class="calendar-wrapper fade-in">
           <div class="calendar-header">
             <h3 class="calendar-title">${monthName}</h3>
-            <div style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600;">
+            <div class="calendar-nav-buttons" style="display: flex; gap: 8px; align-items: center; margin-left: 20px;">
+              <button id="prev-month-btn" class="btn btn-outline btn-sm" title="Previous Month"><i class="fa-solid fa-chevron-left"></i></button>
+              <button id="next-month-btn" class="btn btn-outline btn-sm" title="Next Month"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; margin-left: auto;">
               <i class="fa-solid fa-circle-info"></i> Click any day to mark/modify attendance sheets.
             </div>
           </div>
@@ -196,7 +200,7 @@ const UIComponents = {
 
       // Draw calendar days
       for (let day = 1; day <= totalDays; day++) {
-        const dateStr = `${year}-06-${String(day).padStart(2, '0')}`;
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         
         // Find attendance info for this day
         const dayRecords = attendanceRecords.filter(r => r.date === dateStr);
@@ -205,7 +209,8 @@ const UIComponents = {
         const absentCount = dayRecords.filter(r => r.status === 'Absent').length;
 
         // Is today?
-        const isTodayClass = day === 24 ? 'today' : ''; // Mock system time today: June 24, 2026
+        const systemTodayStr = new Date().toISOString().split('T')[0];
+        const isTodayClass = dateStr === systemTodayStr ? 'today' : '';
 
         html += `
           <div class="calendar-day current-month ${isTodayClass}" data-date="${dateStr}" style="cursor: pointer;">
@@ -234,7 +239,22 @@ const UIComponents = {
 
       div.innerHTML = html;
 
-      // Add click event listeners
+      // Add navigation event listeners
+      document.getElementById('prev-month-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const prevDate = new Date(year, month - 1, 1);
+        const prevMonthStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}-01`;
+        if (onMonthChange) onMonthChange(prevMonthStr);
+      });
+
+      document.getElementById('next-month-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const nextDate = new Date(year, month + 1, 1);
+        const nextMonthStr = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-01`;
+        if (onMonthChange) onMonthChange(nextMonthStr);
+      });
+
+      // Add day click event listeners
       div.querySelectorAll('.calendar-day.current-month').forEach(dayCell => {
         dayCell.addEventListener('click', () => {
           const date = dayCell.getAttribute('data-date');

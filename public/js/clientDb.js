@@ -17,8 +17,8 @@
       settings: {
         companyName: 'PayStream Solutions',
         overtimeRate: 150,
-        currency: 'USD',
-        currencySymbol: '$'
+        currency: 'INR',
+        currencySymbol: '₹'
       },
       employees: [
         {
@@ -148,7 +148,13 @@
   function readDb() {
     const data = localStorage.getItem(DB_KEY);
     if (!data) return initializeLocalDb();
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    if (parsed.settings.currency !== 'INR') {
+      parsed.settings.currency = 'INR';
+      parsed.settings.currencySymbol = '₹';
+      localStorage.setItem(DB_KEY, JSON.stringify(parsed));
+    }
+    return parsed;
   }
 
   function writeDb(db) {

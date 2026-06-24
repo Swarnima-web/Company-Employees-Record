@@ -9,7 +9,13 @@ function readDb() {
       return initializeDb();
     }
     const data = fs.readFileSync(dbPath, 'utf8');
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    if (parsed.settings.currency !== 'INR') {
+      parsed.settings.currency = 'INR';
+      parsed.settings.currencySymbol = '₹';
+      fs.writeFileSync(dbPath, JSON.stringify(parsed, null, 2), 'utf8');
+    }
+    return parsed;
   } catch (err) {
     console.error('Error reading database file, resetting to initial state', err);
     return initializeDb();
@@ -36,8 +42,8 @@ function initializeDb() {
     settings: {
       companyName: 'PayStream Solutions',
       overtimeRate: 150,
-      currency: 'USD',
-      currencySymbol: '$'
+      currency: 'INR',
+      currencySymbol: '₹'
     },
     employees: [
       {

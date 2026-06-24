@@ -515,11 +515,21 @@ async function renderAttendance(container) {
       
       if (attendanceViewMode === 'calendar') {
         displayContainer.innerHTML = `<div class="col-12" id="attendance-calendar-div"></div>`;
-        UIComponents.calendar.render('attendance-calendar-div', allAttendance, employees, (dateStr) => {
-          selectedAttendanceDate = dateStr;
-          attendanceViewMode = 'list';
-          renderAttendance(container);
-        });
+        UIComponents.calendar.render(
+          'attendance-calendar-div', 
+          allAttendance, 
+          employees, 
+          selectedAttendanceDate, 
+          (dateStr) => {
+            selectedAttendanceDate = dateStr;
+            attendanceViewMode = 'list';
+            renderAttendance(container);
+          },
+          (newMonthStr) => {
+            selectedAttendanceDate = newMonthStr;
+            renderAttendance(container);
+          }
+        );
       } else {
         // Render List view with bulk marking features
         displayContainer.innerHTML = `
