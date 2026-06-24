@@ -1,0 +1,15 @@
+{
+  "name": "employee-salary-management-system",
+  "version": "1.0.0",
+  "description": "A modern web application to manage employees, attendance, overtime, and salary distribution.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  },
+  "author": "Antigravity",
+  "license": "ISC"
+}

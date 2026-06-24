@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayStream Solutions - Employee Salary Management System</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ================= AUTH PAGE (LOGIN) ================= -->
+  <div id="login-container" class="login-wrapper hidden">
+    <div class="login-card-container">
+      <div class="login-visual-panel" style="background-image: url('assets/login_bg.png');">
+        <div class="visual-overlay"></div>
+        <div class="visual-content">
+          <img src="assets/logo.png" alt="Company Logo" class="login-logo-img">
+          <h2>Enterprise Payroll Suite</h2>
+          <p>Streamlined human resource records, precise overtime calculations, and automated salary distributions.</p>
+        </div>
+      </div>
+      <div class="login-form-panel">
+        <div class="form-header">
+          <h1>Welcome Back</h1>
+          <p>Please log in to your administrative dashboard</p>
+        </div>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="username"><i class="fa-solid fa-user"></i> Username</label>
+            <input type="text" id="username" placeholder="e.g. admin" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label for="password"><i class="fa-solid fa-lock"></i> Password</label>
+            <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+          <div class="credentials-tip">
+            <strong>Demo Accounts:</strong><br>
+            • Admin: <code>admin</code> / <code>admin123</code><br>
+            • HR Manager: <code>hr</code> / <code>hr123</code><br>
+            • Accountant: <code>accountant</code> / <code>accountant123</code>
+          </div>
+          <div id="login-error" class="error-message hidden">
+            <i class="fa-solid fa-circle-exclamation"></i> Invalid credentials.
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">
+            <span>Log In</span> <i class="fa-solid fa-arrow-right-to-bracket"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= APP PAGE (MAIN SHELL) ================= -->
+  <div id="app-container" class="app-layout hidden">
+    
+    <!-- Sidebar Navigation -->
+    <aside id="app-sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <img src="assets/logo.png" alt="Logo" class="sidebar-logo">
+        <span class="brand-text">PayStream</span>
+        <button id="sidebar-toggle-btn" class="sidebar-collapse-btn">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+      </div>
+      
+      <div class="user-profile-widget">
+        <img src="assets/avatar_placeholder.png" alt="User Avatar" class="user-avatar" id="header-avatar">
+        <div class="user-info">
+          <h4 id="user-display-name">Admin User</h4>
+          <span id="user-display-role" class="badge">Administrator</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="#dashboard" class="menu-item active" data-page="dashboard">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="#employees" class="menu-item" data-page="employees">
+          <i class="fa-solid fa-users"></i>
+          <span>Employees</span>
+        </a>
+        <a href="#attendance" class="menu-item" data-page="attendance">
+          <i class="fa-solid fa-calendar-check"></i>
+          <span>Attendance</span>
+        </a>
+        <a href="#overtime" class="menu-item" data-page="overtime">
+          <i class="fa-solid fa-clock"></i>
+          <span>Overtime</span>
+        </a>
+        <a href="#payroll" class="menu-item" data-page="payroll">
+          <i class="fa-solid fa-money-bill-wave"></i>
+          <span>Payroll</span>
+        </a>
+        <a href="#salary-slip" class="menu-item" data-page="salary-slip">
+          <i class="fa-solid fa-receipt"></i>
+          <span>Salary Slip</span>
+        </a>
+        <a href="#reports" class="menu-item" data-page="reports">
+          <i class="fa-solid fa-file-invoice-dollar"></i>
+          <span>Reports & Analytics</span>
+        </a>
+        <a href="#top-performers" class="menu-item" data-page="top-performers">
+          <i class="fa-solid fa-ranking-star"></i>
+          <span>Top Performers</span>
+        </a>
+        <a href="#settings" class="menu-item" data-page="settings">
+          <i class="fa-solid fa-gears"></i>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="logout-btn" class="btn btn-outline btn-block">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Container -->
+    <main class="main-content">
+      
+      <!-- Top Header Navbar -->
+      <header class="top-header">
+        <div class="header-left">
+          <button id="sidebar-expand-btn" class="sidebar-expand-trigger hidden">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <h1 id="page-title">Dashboard</h1>
+        </div>
+        <div class="header-right">
+          <!-- Dark Mode Toggle -->
+          <button id="theme-toggle" class="theme-toggle-btn" title="Toggle Dark/Light Mode">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+          <!-- Current Date Indicator -->
+          <div class="header-date">
+            <i class="fa-solid fa-clock"></i>
+            <span id="current-system-time">June 24, 2026</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dynamic Page Views Container -->
+      <div id="view-content" class="view-content-wrapper">
+        <!-- Views will be dynamically loaded here by app.js -->
+      </div>
+      
+    </main>
+  </div>
+
+  <!-- ================= GLOBAL MODALS ================= -->
+  <!-- Employee Add/Edit Modal -->
+  <div id="employee-modal" class="modal-backdrop hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="employee-modal-title">Add New Employee</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="employee-form">
+        <input type="hidden" id="emp-form-id">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="emp-full-name">Full Name *</label>
+              <input type="text" id="emp-full-name" required placeholder="e.g. Sarah J. Chen">
+            </div>
+            <div class="form-group col-6">
+              <label for="emp-photo">Photo URL / Base64</label>
+              <input type="text" id="emp-photo" placeholder="Placeholder is used if empty">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="emp-position">Job Position *</label>
+              <input type="text" id="emp-position" required placeholder="e.g. Frontend Engineer">
+            </div>
+            <div class="form-group col-6">
+              <label for="emp-department">Department *</label>
+              <select id="emp-department" required>
+                <option value="" disabled selected>Select Department</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Human Resources">Human Resources</option>
+                <option value="Finance">Finance</option>
+                <option value="Product Design">Product Design</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Sales">Sales</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="emp-joining-date">Joining Date *</label>
+              <input type="date" id="emp-joining-date" required>
+            </div>
+            <div class="form-group col-6">
+              <label for="emp-monthly-salary">Monthly Salary *</label>
+              <div class="currency-input-wrapper">
+                <span class="currency-symbol">$</span>
+                <input type="number" id="emp-monthly-salary" min="0" required placeholder="e.g. 5000">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Employee</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Attendance Marking Modal -->
+  <div id="attendance-modal" class="modal-backdrop hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Mark Attendance</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="attendance-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="att-employee-select">Select Employee</label>
+            <select id="att-employee-select" required></select>
+          </div>
+          <div class="form-group">
+            <label for="att-date">Date</label>
+            <input type="date" id="att-date" required>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <div class="radio-group-container">
+              <label class="radio-box present">
+                <input type="radio" name="att-status" value="Present" checked>
+                <span class="radio-label"><i class="fa-solid fa-circle-check"></i> Present</span>
+              </label>
+              <label class="radio-box halfday">
+                <input type="radio" name="att-status" value="Half Day">
+                <span class="radio-label"><i class="fa-solid fa-circle-pause"></i> Half Day</span>
+              </label>
+              <label class="radio-box absent">
+                <input type="radio" name="att-status" value="Absent">
+                <span class="radio-label"><i class="fa-solid fa-circle-xmark"></i> Absent</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Overtime Logging Modal -->
+  <div id="overtime-modal" class="modal-backdrop hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Log Overtime Hours</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="overtime-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="ot-employee-select">Select Employee</label>
+            <select id="ot-employee-select" required></select>
+          </div>
+          <div class="form-group">
+            <label for="ot-date">Date</label>
+            <input type="date" id="ot-date" required>
+          </div>
+          <div class="form-group">
+            <label for="ot-hours">Overtime Hours</label>
+            <input type="number" id="ot-hours" min="0.5" step="0.5" max="8" required placeholder="e.g. 2">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Log Overtime</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/components.js"></script>
+  <script src="js/clientDb.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
