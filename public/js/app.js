@@ -441,7 +441,9 @@ async function renderEmployees(container) {
                               emp.employee_id.toLowerCase().includes(searchVal) ||
                               emp.position.toLowerCase().includes(searchVal);
         const matchesDept = deptVal === '' || emp.department === deptVal;
-        const matchesStatus = statusVal === '' || emp.statusToday === statusVal;
+        const matchesStatus = statusVal === '' || 
+                              emp.statusToday === statusVal || 
+                              (statusVal === 'Present' && emp.statusToday === 'Half Day');
         return matchesSearch && matchesDept && matchesStatus;
       });
 

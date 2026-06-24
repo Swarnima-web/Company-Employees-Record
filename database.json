@@ -1,0 +1,818 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "password": "admin123",
+      "role": "admin",
+      "fullName": "System Admin"
+    },
+    {
+      "username": "hr",
+      "password": "hr123",
+      "role": "hr",
+      "fullName": "HR Manager"
+    },
+    {
+      "username": "supervisor",
+      "password": "supervisor123",
+      "role": "supervisor",
+      "fullName": "Shift Supervisor"
+    },
+    {
+      "username": "accountant",
+      "password": "accountant123",
+      "role": "accountant",
+      "fullName": "Company Accountant"
+    }
+  ],
+  "settings": {
+    "companyName": "PayStream Solutions",
+    "overtimeRate": 150,
+    "currency": "INR",
+    "currencySymbol": "₹"
+  },
+  "employees": [
+    {
+      "employee_id": "EMP001",
+      "full_name": "Sarah J. Chen",
+      "photo": "/assets/avatar_placeholder.png",
+      "position": "Lead Software Engineer",
+      "department": "Engineering",
+      "joining_date": "2024-01-15",
+      "monthly_salary": 95000,
+      "phone": "+91 98765 43210",
+      "email": "sarah.chen@company.com",
+      "address": "Flat 402, Sea Green Apartments, Bandra West, Mumbai",
+      "dob": "1992-08-24",
+      "gender": "Female"
+    },
+    {
+      "employee_id": "EMP002",
+      "full_name": "Alex R. Thompson",
+      "photo": "/assets/avatar_placeholder.png",
+      "position": "HR Manager",
+      "department": "Human Resources",
+      "joining_date": "2024-03-10",
+      "monthly_salary": 75000,
+      "phone": "+91 98765 43211",
+      "email": "alex.t@company.com",
+      "address": "12, Park Street, Kolkata",
+      "dob": "1989-11-15",
+      "gender": "Male"
+    },
+    {
+      "employee_id": "EMP003",
+      "full_name": "Michael L. Davis",
+      "photo": "/assets/avatar_placeholder.png",
+      "position": "Financial Analyst",
+      "department": "Finance",
+      "joining_date": "2024-06-01",
+      "monthly_salary": 82000,
+      "phone": "+91 98765 43212",
+      "email": "michael.d@company.com",
+      "address": "Apartment 101, Prestige Heights, Bangalore",
+      "dob": "1994-04-05",
+      "gender": "Male"
+    },
+    {
+      "employee_id": "EMP004",
+      "full_name": "Emily B. Chen",
+      "photo": "/assets/avatar_placeholder.png",
+      "position": "UX Designer",
+      "department": "Product Design",
+      "joining_date": "2025-02-18",
+      "monthly_salary": 68000,
+      "phone": "+91 98765 43213",
+      "email": "emily.chen@company.com",
+      "address": "Plot 45, Jubilee Hills, Hyderabad",
+      "dob": "1996-01-20",
+      "gender": "Female"
+    },
+    {
+      "employee_id": "EMP005",
+      "full_name": "Marcus A. Vance",
+      "photo": "/assets/avatar_placeholder.png",
+      "position": "Marketing Specialist",
+      "department": "Marketing",
+      "joining_date": "2025-05-20",
+      "monthly_salary": 58000,
+      "phone": "+91 98765 43214",
+      "email": "marcus.v@company.com",
+      "address": "House 89, Sector 15, Noida",
+      "dob": "1991-05-18",
+      "gender": "Male"
+    }
+  ],
+  "attendance": [
+    {
+      "attendance_id": "ATT0001",
+      "employee_id": "EMP001",
+      "date": "2026-06-01",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0002",
+      "employee_id": "EMP002",
+      "date": "2026-06-01",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0003",
+      "employee_id": "EMP003",
+      "date": "2026-06-01",
+      "status": "Leave"
+    },
+    {
+      "attendance_id": "ATT0004",
+      "employee_id": "EMP004",
+      "date": "2026-06-01",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0005",
+      "employee_id": "EMP005",
+      "date": "2026-06-01",
+      "status": "Half Day"
+    },
+    {
+      "attendance_id": "ATT0006",
+      "employee_id": "EMP001",
+      "date": "2026-06-02",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0007",
+      "employee_id": "EMP002",
+      "date": "2026-06-02",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0008",
+      "employee_id": "EMP003",
+      "date": "2026-06-02",
+      "status": "Leave"
+    },
+    {
+      "attendance_id": "ATT0009",
+      "employee_id": "EMP004",
+      "date": "2026-06-02",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0010",
+      "employee_id": "EMP005",
+      "date": "2026-06-02",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0011",
+      "employee_id": "EMP001",
+      "date": "2026-06-03",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0012",
+      "employee_id": "EMP002",
+      "date": "2026-06-03",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0013",
+      "employee_id": "EMP003",
+      "date": "2026-06-03",
+      "status": "Absent"
+    },
+    {
+      "attendance_id": "ATT0014",
+      "employee_id": "EMP004",
+      "date": "2026-06-03",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0015",
+      "employee_id": "EMP005",
+      "date": "2026-06-03",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0016",
+      "employee_id": "EMP001",
+      "date": "2026-06-04",
+      "status": "Absent"
+    },
+    {
+      "attendance_id": "ATT0017",
+      "employee_id": "EMP002",
+      "date": "2026-06-04",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0018",
+      "employee_id": "EMP003",
+      "date": "2026-06-04",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0019",
+      "employee_id": "EMP004",
+      "date": "2026-06-04",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0020",
+      "employee_id": "EMP005",
+      "date": "2026-06-04",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0021",
+      "employee_id": "EMP001",
+      "date": "2026-06-05",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0022",
+      "employee_id": "EMP002",
+      "date": "2026-06-05",
+      "status": "Half Day"
+    },
+    {
+      "attendance_id": "ATT0023",
+      "employee_id": "EMP003",
+      "date": "2026-06-05",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0024",
+      "employee_id": "EMP004",
+      "date": "2026-06-05",
+      "status": "Absent"
+    },
+    {
+      "attendance_id": "ATT0025",
+      "employee_id": "EMP005",
+      "date": "2026-06-05",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0026",
+      "employee_id": "EMP001",
+      "date": "2026-06-08",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0027",
+      "employee_id": "EMP002",
+      "date": "2026-06-08",
+      "status": "Half Day"
+    },
+    {
+      "attendance_id": "ATT0028",
+      "employee_id": "EMP003",
+      "date": "2026-06-08",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0029",
+      "employee_id": "EMP004",
+      "date": "2026-06-08",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0030",
+      "employee_id": "EMP005",
+      "date": "2026-06-08",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0031",
+      "employee_id": "EMP001",
+      "date": "2026-06-09",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0032",
+      "employee_id": "EMP002",
+      "date": "2026-06-09",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0033",
+      "employee_id": "EMP003",
+      "date": "2026-06-09",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0034",
+      "employee_id": "EMP004",
+      "date": "2026-06-09",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0035",
+      "employee_id": "EMP005",
+      "date": "2026-06-09",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0036",
+      "employee_id": "EMP001",
+      "date": "2026-06-10",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0037",
+      "employee_id": "EMP002",
+      "date": "2026-06-10",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0038",
+      "employee_id": "EMP003",
+      "date": "2026-06-10",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0039",
+      "employee_id": "EMP004",
+      "date": "2026-06-10",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0040",
+      "employee_id": "EMP005",
+      "date": "2026-06-10",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0041",
+      "employee_id": "EMP001",
+      "date": "2026-06-11",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0042",
+      "employee_id": "EMP002",
+      "date": "2026-06-11",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0043",
+      "employee_id": "EMP003",
+      "date": "2026-06-11",
+      "status": "Absent"
+    },
+    {
+      "attendance_id": "ATT0044",
+      "employee_id": "EMP004",
+      "date": "2026-06-11",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0045",
+      "employee_id": "EMP005",
+      "date": "2026-06-11",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0046",
+      "employee_id": "EMP001",
+      "date": "2026-06-12",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0047",
+      "employee_id": "EMP002",
+      "date": "2026-06-12",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0048",
+      "employee_id": "EMP003",
+      "date": "2026-06-12",
+      "status": "Half Day"
+    },
+    {
+      "attendance_id": "ATT0049",
+      "employee_id": "EMP004",
+      "date": "2026-06-12",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0050",
+      "employee_id": "EMP005",
+      "date": "2026-06-12",
+      "status": "Leave"
+    },
+    {
+      "attendance_id": "ATT0051",
+      "employee_id": "EMP001",
+      "date": "2026-06-15",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0052",
+      "employee_id": "EMP002",
+      "date": "2026-06-15",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0053",
+      "employee_id": "EMP003",
+      "date": "2026-06-15",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0054",
+      "employee_id": "EMP004",
+      "date": "2026-06-15",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0055",
+      "employee_id": "EMP005",
+      "date": "2026-06-15",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0056",
+      "employee_id": "EMP001",
+      "date": "2026-06-16",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0057",
+      "employee_id": "EMP002",
+      "date": "2026-06-16",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0058",
+      "employee_id": "EMP003",
+      "date": "2026-06-16",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0059",
+      "employee_id": "EMP004",
+      "date": "2026-06-16",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0060",
+      "employee_id": "EMP005",
+      "date": "2026-06-16",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0061",
+      "employee_id": "EMP001",
+      "date": "2026-06-17",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0062",
+      "employee_id": "EMP002",
+      "date": "2026-06-17",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0063",
+      "employee_id": "EMP003",
+      "date": "2026-06-17",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0064",
+      "employee_id": "EMP004",
+      "date": "2026-06-17",
+      "status": "Half Day"
+    },
+    {
+      "attendance_id": "ATT0065",
+      "employee_id": "EMP005",
+      "date": "2026-06-17",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0066",
+      "employee_id": "EMP001",
+      "date": "2026-06-18",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0067",
+      "employee_id": "EMP002",
+      "date": "2026-06-18",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0068",
+      "employee_id": "EMP003",
+      "date": "2026-06-18",
+      "status": "Absent"
+    },
+    {
+      "attendance_id": "ATT0069",
+      "employee_id": "EMP004",
+      "date": "2026-06-18",
+      "status": "Half Day"
+    },
+    {
+      "attendance_id": "ATT0070",
+      "employee_id": "EMP005",
+      "date": "2026-06-18",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0071",
+      "employee_id": "EMP001",
+      "date": "2026-06-19",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0072",
+      "employee_id": "EMP002",
+      "date": "2026-06-19",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0073",
+      "employee_id": "EMP003",
+      "date": "2026-06-19",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0074",
+      "employee_id": "EMP004",
+      "date": "2026-06-19",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0075",
+      "employee_id": "EMP005",
+      "date": "2026-06-19",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0076",
+      "employee_id": "EMP001",
+      "date": "2026-06-22",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0077",
+      "employee_id": "EMP002",
+      "date": "2026-06-22",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0078",
+      "employee_id": "EMP003",
+      "date": "2026-06-22",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0079",
+      "employee_id": "EMP004",
+      "date": "2026-06-22",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0080",
+      "employee_id": "EMP005",
+      "date": "2026-06-22",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0081",
+      "employee_id": "EMP001",
+      "date": "2026-06-23",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0082",
+      "employee_id": "EMP002",
+      "date": "2026-06-23",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0083",
+      "employee_id": "EMP003",
+      "date": "2026-06-23",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0084",
+      "employee_id": "EMP004",
+      "date": "2026-06-23",
+      "status": "Absent"
+    },
+    {
+      "attendance_id": "ATT0085",
+      "employee_id": "EMP005",
+      "date": "2026-06-23",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0086",
+      "employee_id": "EMP001",
+      "date": "2026-06-24",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0087",
+      "employee_id": "EMP002",
+      "date": "2026-06-24",
+      "status": "Leave"
+    },
+    {
+      "attendance_id": "ATT0088",
+      "employee_id": "EMP003",
+      "date": "2026-06-24",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0089",
+      "employee_id": "EMP004",
+      "date": "2026-06-24",
+      "status": "Present"
+    },
+    {
+      "attendance_id": "ATT0090",
+      "employee_id": "EMP005",
+      "date": "2026-06-24",
+      "status": "Present"
+    }
+  ],
+  "overtime": [
+    {
+      "overtime_id": "OT0001",
+      "employee_id": "EMP004",
+      "date": "2026-06-01",
+      "overtime_hours": 1
+    },
+    {
+      "overtime_id": "OT0002",
+      "employee_id": "EMP004",
+      "date": "2026-06-03",
+      "overtime_hours": 3
+    },
+    {
+      "overtime_id": "OT0003",
+      "employee_id": "EMP005",
+      "date": "2026-06-03",
+      "overtime_hours": 3
+    },
+    {
+      "overtime_id": "OT0004",
+      "employee_id": "EMP002",
+      "date": "2026-06-04",
+      "overtime_hours": 3
+    },
+    {
+      "overtime_id": "OT0005",
+      "employee_id": "EMP003",
+      "date": "2026-06-05",
+      "overtime_hours": 2
+    },
+    {
+      "overtime_id": "OT0006",
+      "employee_id": "EMP001",
+      "date": "2026-06-08",
+      "overtime_hours": 1
+    },
+    {
+      "overtime_id": "OT0007",
+      "employee_id": "EMP004",
+      "date": "2026-06-09",
+      "overtime_hours": 3
+    },
+    {
+      "overtime_id": "OT0008",
+      "employee_id": "EMP005",
+      "date": "2026-06-10",
+      "overtime_hours": 1
+    },
+    {
+      "overtime_id": "OT0009",
+      "employee_id": "EMP002",
+      "date": "2026-06-11",
+      "overtime_hours": 2
+    },
+    {
+      "overtime_id": "OT0010",
+      "employee_id": "EMP004",
+      "date": "2026-06-11",
+      "overtime_hours": 2
+    },
+    {
+      "overtime_id": "OT0011",
+      "employee_id": "EMP005",
+      "date": "2026-06-11",
+      "overtime_hours": 2
+    },
+    {
+      "overtime_id": "OT0012",
+      "employee_id": "EMP004",
+      "date": "2026-06-12",
+      "overtime_hours": 2
+    },
+    {
+      "overtime_id": "OT0013",
+      "employee_id": "EMP002",
+      "date": "2026-06-15",
+      "overtime_hours": 2
+    },
+    {
+      "overtime_id": "OT0014",
+      "employee_id": "EMP002",
+      "date": "2026-06-16",
+      "overtime_hours": 1
+    },
+    {
+      "overtime_id": "OT0015",
+      "employee_id": "EMP004",
+      "date": "2026-06-16",
+      "overtime_hours": 2
+    },
+    {
+      "overtime_id": "OT0016",
+      "employee_id": "EMP002",
+      "date": "2026-06-17",
+      "overtime_hours": 3
+    },
+    {
+      "overtime_id": "OT0017",
+      "employee_id": "EMP003",
+      "date": "2026-06-17",
+      "overtime_hours": 3
+    },
+    {
+      "overtime_id": "OT0018",
+      "employee_id": "EMP002",
+      "date": "2026-06-18",
+      "overtime_hours": 3
+    },
+    {
+      "overtime_id": "OT0019",
+      "employee_id": "EMP002",
+      "date": "2026-06-22",
+      "overtime_hours": 2
+    },
+    {
+      "overtime_id": "OT0020",
+      "employee_id": "EMP001",
+      "date": "2026-06-23",
+      "overtime_hours": 3
+    },
+    {
+      "overtime_id": "OT0021",
+      "employee_id": "EMP005",
+      "date": "2026-06-24",
+      "overtime_hours": 2
+    }
+  ],
+  "salaries": [
+    {
+      "salary_id": "SAL0001",
+      "employee_id": "EMP001",
+      "month": "2026-05",
+      "present_days": 21,
+      "overtime_hours": 13,
+      "final_salary": 68450
+    },
+    {
+      "salary_id": "SAL0002",
+      "employee_id": "EMP002",
+      "month": "2026-05",
+      "present_days": 21,
+      "overtime_hours": 2,
+      "final_salary": 52800
+    },
+    {
+      "salary_id": "SAL0003",
+      "employee_id": "EMP003",
+      "month": "2026-05",
+      "present_days": 21,
+      "overtime_hours": 1,
+      "final_salary": 57550
+    },
+    {
+      "salary_id": "SAL0004",
+      "employee_id": "EMP004",
+      "month": "2026-05",
+      "present_days": 19.5,
+      "overtime_hours": 0,
+      "final_salary": 44200
+    },
+    {
+      "salary_id": "SAL0005",
+      "employee_id": "EMP005",
+      "month": "2026-05",
+      "present_days": 20.5,
+      "overtime_hours": 6,
+      "final_salary": 40533
+    }
+  ]
+}
