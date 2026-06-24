@@ -813,6 +813,46 @@
       "present_days": 20.5,
       "overtime_hours": 6,
       "final_salary": 40533
+    },
+    {
+      "salary_id": "SAL0006",
+      "employee_id": "EMP001",
+      "month": "2026-06",
+      "present_days": 17,
+      "overtime_hours": 4,
+      "final_salary": 54433
+    },
+    {
+      "salary_id": "SAL0007",
+      "employee_id": "EMP002",
+      "month": "2026-06",
+      "present_days": 17,
+      "overtime_hours": 16,
+      "final_salary": 44900
+    },
+    {
+      "salary_id": "SAL0008",
+      "employee_id": "EMP003",
+      "month": "2026-06",
+      "present_days": 14.5,
+      "overtime_hours": 5,
+      "final_salary": 40383
+    },
+    {
+      "salary_id": "SAL0009",
+      "employee_id": "EMP004",
+      "month": "2026-06",
+      "present_days": 15,
+      "overtime_hours": 13,
+      "final_salary": 35950
+    },
+    {
+      "salary_id": "SAL0010",
+      "employee_id": "EMP005",
+      "month": "2026-06",
+      "present_days": 17.5,
+      "overtime_hours": 8,
+      "final_salary": 35033
     }
   ]
 }

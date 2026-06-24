@@ -440,10 +440,10 @@ const db = {
           a => a.employee_id === emp.employee_id && a.date.startsWith(monthStr)
         );
 
-        // Present days formula: Present = 1, Half Day = 0.5, Absent = 0
+        // Present days formula: Present = 1, Leave = 1, Half Day = 0.5, Absent = 0
         let present_days = 0;
         empAttendance.forEach(a => {
-          if (a.status === 'Present') present_days += 1;
+          if (a.status === 'Present' || a.status === 'Leave') present_days += 1;
           else if (a.status === 'Half Day') present_days += 0.5;
         });
 

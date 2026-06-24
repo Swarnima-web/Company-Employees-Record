@@ -504,7 +504,7 @@ async function renderEmployees(container) {
       // 3. Income
       const baseSalary = emp.monthly_salary;
       const dailySalary = baseSalary / 30;
-      const presentDays = presentCount + (halfCount * 0.5);
+      const presentDays = presentCount + leaveCount + (halfCount * 0.5);
       const attendancePay = Math.round(presentDays * dailySalary);
       const overtimePay = overtimeHours * settings.overtimeRate;
       const estEarnings = attendancePay + overtimePay;
@@ -1302,7 +1302,7 @@ async function renderSalarySlip(container) {
                   <td style="text-align: right;">-</td>
                 </tr>
                 <tr>
-                  <td>Unworked Leaves Deduction (${leaveDays} days absent)</td>
+                  <td>Deductions for Absence / Unpaid Days (${leaveDays} days)</td>
                   <td style="text-align: right;">-</td>
                   <td style="text-align: right; color: var(--danger-color);">${settings.currencySymbol}${leaveDeduction.toLocaleString()}</td>
                 </tr>

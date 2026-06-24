@@ -28,7 +28,7 @@ function calculateProductivity(empId, monthStr) {
   let halfDays = 0;
 
   allAttendance.forEach(a => {
-    if (a.status === 'Present') presentDays += 1;
+    if (a.status === 'Present' || a.status === 'Leave') presentDays += 1;
     else if (a.status === 'Half Day') {
       presentDays += 0.5;
       halfDays += 1;
@@ -232,7 +232,7 @@ app.get('/api/analytics/dashboard', (req, res) => {
     const att = todayAttendance.find(a => a.employee_id === emp.employee_id);
     let factor = 0;
     if (att) {
-      if (att.status === 'Present') factor = 1;
+      if (att.status === 'Present' || att.status === 'Leave') factor = 1;
       else if (att.status === 'Half Day') factor = 0.5;
     }
     const dailySalary = (emp.monthly_salary / 30) * factor;
@@ -247,7 +247,7 @@ app.get('/api/analytics/dashboard', (req, res) => {
     const empAttendance = attendance.filter(a => a.employee_id === emp.employee_id && a.date.startsWith(targetMonth));
     let present_days = 0;
     empAttendance.forEach(a => {
-      if (a.status === 'Present') present_days += 1;
+      if (a.status === 'Present' || a.status === 'Leave') present_days += 1;
       else if (a.status === 'Half Day') present_days += 0.5;
     });
     const empOvertime = overtime.filter(o => o.employee_id === emp.employee_id && o.date.startsWith(targetMonth));
