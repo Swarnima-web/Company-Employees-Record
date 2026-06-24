@@ -22,18 +22,18 @@ const UIComponents = {
             label: 'Monthly Salary Expense By Dept',
             data: values,
             backgroundColor: [
-              'rgba(212, 175, 55, 0.75)',   // Primary Accent Gold
-              'rgba(223, 186, 115, 0.75)',  // Secondary Accent Soft Gold
-              'rgba(16, 185, 129, 0.75)',   // Emerald Green
-              'rgba(245, 158, 11, 0.75)',   // Warning Gold
-              'rgba(239, 68, 68, 0.75)',    // Coral Red
-              'rgba(113, 128, 150, 0.75)'   // Slate Neutral
+              'rgba(244, 211, 94, 0.75)',   // Gold
+              'rgba(6, 182, 212, 0.75)',    // Teal
+              'rgba(139, 92, 246, 0.75)',   // Purple
+              'rgba(16, 185, 129, 0.75)',   // Green
+              'rgba(239, 68, 68, 0.75)',    // Red
+              'rgba(113, 128, 150, 0.75)'   // Slate
             ],
             borderColor: [
-              '#D4AF37',
-              '#DFBA73',
+              '#F4D35E',
+              '#06B6D4',
+              '#8B5CF6',
               '#10B981',
-              '#F59E0B',
               '#EF4444',
               '#718096'
             ],
@@ -82,7 +82,8 @@ const UIComponents = {
             backgroundColor: [
               '#10B981', // Present (Green)
               '#EF4444', // Absent (Red)
-              '#F59E0B'  // Half Day (Gold)
+              '#F4D35E', // Half Day (Gold)
+              '#8B5CF6'  // Leave (Purple)
             ],
             borderWidth: 2,
             borderColor: 'var(--bg-secondary)',
@@ -125,12 +126,12 @@ const UIComponents = {
           datasets: [{
             label: 'Total OT Hours Worked',
             data: values,
-            borderColor: '#D4AF37',
-            backgroundColor: 'rgba(212, 175, 55, 0.1)',
+            borderColor: '#06B6D4',
+            backgroundColor: 'rgba(6, 182, 212, 0.1)',
             fill: true,
             tension: 0.35,
             borderWidth: 3,
-            pointBackgroundColor: '#DFBA73',
+            pointBackgroundColor: '#8B5CF6',
             pointBorderColor: '#FFFFFF',
             pointBorderWidth: 1.5,
             pointRadius: 4,
