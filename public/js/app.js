@@ -769,9 +769,8 @@ async function renderEmployees(container) {
 }
 
 // 3. Attendance View
-let attendanceViewMode = 'calendar'; // 'calendar' or 'list' or 'history'
+let attendanceViewMode = 'calendar'; // 'calendar' or 'list'
 let selectedAttendanceDate = new Date().toISOString().split('T')[0];
-let selectedHistoryEmployeeId = null;
 async function renderAttendance(container) {
   try {
     const employees = await apiCall('/api/employees');
@@ -801,101 +800,6 @@ async function renderAttendance(container) {
             renderAttendance(container);
           }
         );
-      } else if (attendanceViewMode === 'history') {
-        displayContainer.innerHTML = `
-          <div class="card col-12">
-            <div class="card-header">
-              <h3 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Employee Attendance Verification & History Log</h3>
-            </div>
-            <div class="card-body" style="padding: 24px;">
-              
-              <!-- Search box autocomplete -->
-              <div class="form-group" style="max-width: 450px; margin-bottom: 24px;">
-                <label for="ath-tab-employee-search-input" style="font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; display: block;">Search Employee to Verify Records</label>
-                <div class="autocomplete-container" style="position: relative;">
-                  <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 12px; color: var(--text-secondary);"></i>
-                  <input type="text" id="ath-tab-employee-search-input" placeholder="Type employee ID or Name..." autocomplete="off" class="form-control" style="padding-left: 36px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: var(--border-radius-sm); width: 100%; height: 40px;">
-                  <input type="hidden" id="ath-tab-employee-id" value="${selectedHistoryEmployeeId || ''}">
-                  <div id="ath-tab-employee-suggestions" class="autocomplete-suggestions hidden" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); z-index: 100; max-height: 200px; overflow-y: auto; box-shadow: var(--shadow-md);"></div>
-                </div>
-              </div>
-              
-              <!-- Detailed Record Container -->
-              <div id="ath-tab-record-display" style="display: ${selectedHistoryEmployeeId ? 'block' : 'none'};">
-                <!-- Profile Header -->
-                <div class="ath-profile-card" style="display: flex; gap: 16px; background: var(--bg-secondary); padding: 16px; border-radius: var(--border-radius-md); border: 1px solid var(--border-color); margin-bottom: 20px; align-items: center;">
-                  <img src="" id="ath-tab-emp-photo" alt="Avatar" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-purple);">
-                  <div>
-                    <h4 id="ath-tab-emp-name" style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0;"></h4>
-                    <p id="ath-tab-emp-details" style="font-size: 0.85rem; color: var(--text-secondary); margin: 4px 0 0;"></p>
-                  </div>
-                </div>
-
-                <!-- Stats Summary Block -->
-                <div class="ath-stats-row" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px;">
-                  <div class="ath-stat-card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); padding: 12px; text-align: center; border-left: 4px solid var(--success-color);">
-                    <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Present</div>
-                    <div id="ath-tab-stat-present" style="font-size: 1.3rem; font-weight: 800; color: var(--success-color); margin-top: 4px;">0</div>
-                  </div>
-                  <div class="ath-stat-card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); padding: 12px; text-align: center; border-left: 4px solid var(--warning-color);">
-                    <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Half Days</div>
-                    <div id="ath-tab-stat-halfday" style="font-size: 1.3rem; font-weight: 800; color: var(--warning-color); margin-top: 4px;">0</div>
-                  </div>
-                  <div class="ath-stat-card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); padding: 12px; text-align: center; border-left: 4px solid var(--accent-purple);">
-                    <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Leaves</div>
-                    <div id="ath-tab-stat-leave" style="font-size: 1.3rem; font-weight: 800; color: var(--accent-purple); margin-top: 4px;">0</div>
-                  </div>
-                  <div class="ath-stat-card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); padding: 12px; text-align: center; border-left: 4px solid var(--danger-color);">
-                    <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Absents</div>
-                    <div id="ath-tab-stat-absent" style="font-size: 1.3rem; font-weight: 800; color: var(--danger-color); margin-top: 4px;">0</div>
-                  </div>
-                  <div class="ath-stat-card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); padding: 12px; text-align: center; border-left: 4px solid var(--accent-blue);">
-                    <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Overtime</div>
-                    <div id="ath-tab-stat-ot" style="font-size: 1.3rem; font-weight: 800; color: var(--accent-blue); margin-top: 4px;">0 hrs</div>
-                  </div>
-                </div>
-
-                <!-- Filters Section -->
-                <div class="ath-filters" style="display: flex; gap: 12px; align-items: flex-end; background: var(--bg-secondary); padding: 12px; border-radius: var(--border-radius-md); border: 1px solid var(--border-color); margin-bottom: 20px; flex-wrap: wrap;">
-                  <div class="form-group" style="margin-bottom: 0; min-width: 150px; display: flex; flex-direction: column; gap: 6px;">
-                    <label for="ath-tab-filter-preset" style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Filter Range</label>
-                    <select id="ath-tab-filter-preset" class="form-control" style="height: 38px; font-size: 0.85rem; margin-bottom: 0; padding: 4px 8px; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
-                      <option value="all">All Records</option>
-                      <option value="today">Today</option>
-                      <option value="week">This Week</option>
-                      <option value="month" selected>This Month (June)</option>
-                      <option value="custom">Custom Date Range</option>
-                    </select>
-                  </div>
-                  <div id="ath-tab-custom-dates" style="display: none; gap: 10px; align-items: flex-end;">
-                    <div class="form-group" style="margin-bottom: 0; display: flex; flex-direction: column; gap: 6px;">
-                      <label for="ath-tab-start-date" style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Start Date</label>
-                      <input type="date" id="ath-tab-start-date" class="form-control" style="height: 38px; font-size: 0.85rem; margin-bottom: 0; padding: 4px 8px; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0; display: flex; flex-direction: column; gap: 6px;">
-                      <label for="ath-tab-end-date" style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">End Date</label>
-                      <input type="date" id="ath-tab-end-date" class="form-control" style="height: 38px; font-size: 0.85rem; margin-bottom: 0; padding: 4px 8px; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
-                    </div>
-                  </div>
-                  
-                  <div style="margin-left: auto; display: flex; gap: 10px; align-items: center; height: 38px;">
-                    <label style="font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; color: var(--text-primary);">
-                      <input type="checkbox" id="ath-tab-toggle-timeline" style="margin: 0; width: 16px; height: 16px; cursor: pointer;">
-                      <span>View Full Attendance Timeline</span>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Table / Timeline Display Container -->
-                <div id="ath-tab-records-container" class="table-responsive" style="max-height: 400px; border: 1px solid var(--border-color); border-radius: var(--border-radius-md); overflow-y: auto;">
-                  <!-- Dynamic Content -->
-                </div>
-              </div>
-
-            </div>
-          </div>
-        `;
-        setupHistoryTabAutocomplete(employees, allAttendance, allOvertime, settings);
       } else {
         // Render List view with bulk marking features
         displayContainer.innerHTML = `
@@ -931,12 +835,9 @@ async function renderAttendance(container) {
                     return `
                       <tr>
                         <td>
-                          <div class="table-avatar-cell" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                              <img src="${emp.photo}" class="table-avatar" alt="Avatar">
-                              <span class="emp-name-bold">[${emp.employee_id}] ${emp.full_name}</span>
-                            </div>
-                            <button class="btn btn-outline view-ath-btn" data-id="${emp.employee_id}" style="padding: 4px 8px; font-size: 0.75rem; height: auto; display: flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); color: var(--text-secondary); background: none; cursor: pointer;" title="View History"><i class="fa-solid fa-clock-rotate-left"></i> History</button>
+                          <div class="table-avatar-cell view-ath-btn" data-id="${emp.employee_id}" style="display: flex; align-items: center; gap: 10px; cursor: pointer;" title="Click to view attendance history">
+                            <img src="${emp.photo}" class="table-avatar" alt="Avatar">
+                            <span class="emp-name-bold" style="color: #06B6D4; text-decoration: underline; text-underline-offset: 3px;">[${emp.employee_id}] ${emp.full_name}</span>
                           </div>
                         </td>
                         <td><code>${emp.employee_id}</code></td>
@@ -975,327 +876,15 @@ async function renderAttendance(container) {
       }
     };
 
-    function setupHistoryTabAutocomplete(employees, allAttendance, allOvertime, settings) {
-      const input = document.getElementById('ath-tab-employee-search-input');
-      const suggestionsDiv = document.getElementById('ath-tab-employee-suggestions');
-      const idInput = document.getElementById('ath-tab-employee-id');
-      const recordDisplay = document.getElementById('ath-tab-record-display');
 
-      if (!input || !suggestionsDiv) return;
-
-      const selectEmployee = (emp) => {
-        input.value = `[${emp.employee_id}] ${emp.full_name}`;
-        idInput.value = emp.employee_id;
-        selectedHistoryEmployeeId = emp.employee_id;
-        suggestionsDiv.classList.add('hidden');
-        recordDisplay.style.display = 'block';
-        loadHistoryTabEmployeeRecord(emp, allAttendance, allOvertime, settings);
-      };
-
-      if (selectedHistoryEmployeeId) {
-        const emp = employees.find(e => e.employee_id === selectedHistoryEmployeeId);
-        if (emp) {
-          selectEmployee(emp);
-        }
-      }
-
-      input.addEventListener('input', (e) => {
-        const val = e.target.value.toLowerCase().trim();
-        if (!val) {
-          suggestionsDiv.classList.add('hidden');
-          return;
-        }
-
-        const matches = employees.filter(emp => 
-          emp.full_name.toLowerCase().includes(val) || 
-          emp.employee_id.toLowerCase().includes(val)
-        );
-
-        if (matches.length === 0) {
-          suggestionsDiv.innerHTML = `<div style="padding: 10px; color: var(--text-secondary); font-size: 0.85rem;">No employees found</div>`;
-          suggestionsDiv.classList.remove('hidden');
-          return;
-        }
-
-        suggestionsDiv.innerHTML = matches.map(emp => `
-          <div class="autocomplete-suggestion-item" data-id="${emp.employee_id}" style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px;">
-            <img src="${emp.photo || 'assets/avatar_placeholder.png'}" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover;">
-            <div style="font-size: 0.85rem;">
-              <span style="font-weight: 600; color: var(--text-primary);">[${emp.employee_id}] ${emp.full_name}</span>
-              <div style="font-size: 0.75rem; color: var(--text-secondary);">${emp.position}</div>
-            </div>
-          </div>
-        `).join('');
-        suggestionsDiv.classList.remove('hidden');
-      });
-
-      document.addEventListener('click', (e) => {
-        if (input && suggestionsDiv && !input.contains(e.target) && !suggestionsDiv.contains(e.target)) {
-          suggestionsDiv.classList.add('hidden');
-        }
-      });
-
-      suggestionsDiv.addEventListener('click', (e) => {
-        const suggestion = e.target.closest('.autocomplete-suggestion-item');
-        if (!suggestion) return;
-
-        const empId = suggestion.getAttribute('data-id');
-        const emp = employees.find(e => e.employee_id === empId);
-        if (emp) {
-          selectEmployee(emp);
-        }
-      });
-    }
-
-    function loadHistoryTabEmployeeRecord(emp, allAttendance, allOvertime, settings) {
-      const employeeId = emp.employee_id;
-      
-      document.getElementById('ath-tab-emp-photo').src = emp.photo || 'assets/avatar_placeholder.png';
-      document.getElementById('ath-tab-emp-name').textContent = `[${emp.employee_id}] ${emp.full_name}`;
-      document.getElementById('ath-tab-emp-details').textContent = `${emp.position} • ${emp.department} • Joined ${formatDateToDDMMYYYY(emp.joining_date)}`;
-
-      const presetSelect = document.getElementById('ath-tab-filter-preset');
-      const customDatesDiv = document.getElementById('ath-tab-custom-dates');
-      const startDateInput = document.getElementById('ath-tab-start-date');
-      const endDateInput = document.getElementById('ath-tab-end-date');
-      const toggleTimeline = document.getElementById('ath-tab-toggle-timeline');
-
-      const todayStr = '2026-06-24';
-      if (!startDateInput.value) startDateInput.value = '2026-06-01';
-      if (!endDateInput.value) endDateInput.value = '2026-06-30';
-
-      const getRangeDates = () => {
-        const preset = presetSelect.value;
-        let start = '';
-        let end = '';
-
-        if (preset === 'today') {
-          start = todayStr;
-          end = todayStr;
-        } else if (preset === 'week') {
-          start = '2026-06-22';
-          end = '2026-06-28';
-        } else if (preset === 'month') {
-          start = '2026-06-01';
-          end = '2026-06-30';
-        } else if (preset === 'custom') {
-          start = startDateInput.value;
-          end = endDateInput.value;
-        } else {
-          const dates = allAttendance.map(a => a.date).sort();
-          start = dates.length > 0 ? dates[0] : '2026-06-01';
-          end = todayStr;
-        }
-        return { start, end };
-      };
-
-      const renderRecordsContent = () => {
-        const { start, end } = getRangeDates();
-        
-        const empAtt = allAttendance.filter(a => a.employee_id === employeeId && (!start || a.date >= start) && (!end || a.date <= end));
-        const empOt = allOvertime.filter(o => o.employee_id === employeeId && (!start || o.date >= start) && (!end || o.date <= end));
-
-        const counts = { Present: 0, 'Half Day': 0, Leave: 0, Absent: 0 };
-        empAtt.forEach(a => {
-          if (counts[a.status] !== undefined) {
-            counts[a.status]++;
-          }
-        });
-        const otHours = empOt.reduce((sum, o) => sum + o.overtime_hours, 0);
-
-        document.getElementById('ath-tab-stat-present').textContent = counts['Present'];
-        document.getElementById('ath-tab-stat-halfday').textContent = counts['Half Day'];
-        document.getElementById('ath-tab-stat-leave').textContent = counts['Leave'];
-        document.getElementById('ath-tab-stat-absent').textContent = counts['Absent'];
-        document.getElementById('ath-tab-stat-ot').textContent = `${otHours} hrs`;
-
-        let datesToRender = [];
-        if (start && end) {
-          let current = new Date(start);
-          const last = new Date(end);
-          while (current <= last) {
-            datesToRender.push(current.toISOString().split('T')[0]);
-            current.setDate(current.getDate() + 1);
-          }
-        } else {
-          datesToRender = [...new Set(empAtt.map(a => a.date))].sort();
-        }
-        datesToRender.reverse();
-
-        const container = document.getElementById('ath-tab-records-container');
-        const isTimeline = toggleTimeline.checked;
-        const allowedToEdit = rolePages[state.user.role]?.includes('attendance');
-
-        if (isTimeline) {
-          if (datesToRender.length === 0) {
-            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-secondary);">No records found in this period.</div>`;
-            return;
-          }
-
-          container.innerHTML = `
-            <div class="ath-timeline" style="padding: 16px 24px;">
-              ${datesToRender.map(dateStr => {
-                const att = empAtt.find(a => a.date === dateStr);
-                const ot = empOt.find(o => o.date === dateStr);
-                const status = att ? att.status : 'Not Marked';
-                
-                let markerClass = 'notmarked';
-                let statusBadge = `<span class="badge badge-neutral">Not Marked</span>`;
-                if (status === 'Present') { markerClass = 'present'; statusBadge = `<span class="badge badge-present">Present</span>`; }
-                else if (status === 'Half Day') { markerClass = 'halfday'; statusBadge = `<span class="badge badge-halfday">Half Day</span>`; }
-                else if (status === 'Leave') { markerClass = 'leave'; statusBadge = `<span class="badge badge-leave">Leave</span>`; }
-                else if (status === 'Absent') { markerClass = 'absent'; statusBadge = `<span class="badge badge-absent">Absent</span>`; }
-
-                const otBadge = ot ? `<span class="ath-timeline-ot"><i class="fa-solid fa-clock"></i> +${ot.overtime_hours} hrs OT</span>` : '';
-                const isLocked = dateStr < todayStr;
-
-                let editSection = '';
-                if (allowedToEdit && !isLocked) {
-                  editSection = `
-                    <select class="ath-tab-inline-status form-control" data-date="${dateStr}" style="height: 30px; font-size: 0.8rem; padding: 2px 4px; margin: 0; width: 110px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: var(--border-radius-sm);">
-                      <option value="Present" ${status === 'Present' ? 'selected' : ''}>Present</option>
-                      <option value="Half Day" ${status === 'Half Day' ? 'selected' : ''}>Half Day</option>
-                      <option value="Leave" ${status === 'Leave' ? 'selected' : ''}>Leave</option>
-                      <option value="Absent" ${status === 'Absent' ? 'selected' : ''}>Absent</option>
-                      <option value="Not Marked" ${status === 'Not Marked' ? 'selected' : ''}>Not Marked</option>
-                    </select>
-                  `;
-                } else {
-                  editSection = statusBadge;
-                }
-
-                return `
-                  <div class="ath-timeline-item">
-                    <div class="ath-timeline-marker ${markerClass}"></div>
-                    <div class="ath-timeline-content">
-                      <span class="ath-timeline-date">${formatDateToDDMMYYYY(dateStr)} (${new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' })})</span>
-                      <div class="ath-timeline-info">
-                        ${otBadge}
-                        ${editSection}
-                      </div>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          `;
-        } else {
-          if (datesToRender.length === 0) {
-            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-secondary);">No records found in this period.</div>`;
-            return;
-          }
-
-          container.innerHTML = `
-            <table class="table-custom">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Day</th>
-                  <th>Status</th>
-                  <th>Overtime</th>
-                  <th style="text-align: right;">Verification / Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${datesToRender.map(dateStr => {
-                  const att = empAtt.find(a => a.date === dateStr);
-                  const ot = empOt.find(o => o.date === dateStr);
-                  const status = att ? att.status : 'Not Marked';
-                  
-                  let statusBadge = `<span class="badge badge-neutral">Not Marked</span>`;
-                  if (status === 'Present') statusBadge = `<span class="badge badge-present">Present</span>`;
-                  else if (status === 'Half Day') statusBadge = `<span class="badge badge-halfday">Half Day</span>`;
-                  else if (status === 'Leave') statusBadge = `<span class="badge badge-leave">Leave</span>`;
-                  else if (status === 'Absent') statusBadge = `<span class="badge badge-absent">Absent</span>`;
-
-                  const otText = ot ? `<code>${ot.overtime_hours} hrs</code>` : '-';
-                  const isLocked = dateStr < todayStr;
-
-                  let actionHtml = '';
-                  if (allowedToEdit && !isLocked) {
-                    actionHtml = `
-                      <select class="ath-tab-inline-status form-control" data-date="${dateStr}" style="height: 30px; font-size: 0.8rem; padding: 2px 4px; margin: 0; width: 120px; display: inline-block; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: var(--border-radius-sm);">
-                        <option value="Present" ${status === 'Present' ? 'selected' : ''}>Present</option>
-                        <option value="Half Day" ${status === 'Half Day' ? 'selected' : ''}>Half Day</option>
-                        <option value="Leave" ${status === 'Leave' ? 'selected' : ''}>Leave</option>
-                        <option value="Absent" ${status === 'Absent' ? 'selected' : ''}>Absent</option>
-                        <option value="Not Marked" ${status === 'Not Marked' ? 'selected' : ''}>Not Marked</option>
-                      </select>
-                    `;
-                  } else {
-                    actionHtml = isLocked ? `
-                      <span style="font-size: 0.75rem; color: var(--text-secondary);"><i class="fa-solid fa-lock"></i> Locked</span>
-                    ` : `
-                      <span style="font-size: 0.75rem; color: var(--text-secondary);"><i class="fa-solid fa-eye"></i> Read-only</span>
-                    `;
-                  }
-
-                  return `
-                    <tr>
-                      <td><strong>${formatDateToDDMMYYYY(dateStr)}</strong></td>
-                      <td>${new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long' })}</td>
-                      <td>${statusBadge}</td>
-                      <td>${otText}</td>
-                      <td style="text-align: right;">${actionHtml}</td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
-          `;
-        }
-
-        document.querySelectorAll('.ath-tab-inline-status').forEach(select => {
-          select.addEventListener('change', async (e) => {
-            const date = e.target.getAttribute('data-date');
-            const newStatus = e.target.value;
-
-            try {
-              await apiCall('/api/attendance', 'POST', { employee_id: employeeId, date, status: newStatus });
-              
-              const updatedAttendance = await apiCall('/api/attendance');
-              allAttendance.length = 0;
-              allAttendance.push(...updatedAttendance);
-
-              renderRecordsContent();
-            } catch (err) {
-              alert('Failed to update status: ' + err.message);
-              renderRecordsContent();
-            }
-          });
-        });
-      };
-
-      presetSelect.onchange = () => {
-        if (presetSelect.value === 'custom') {
-          customDatesDiv.style.display = 'flex';
-        } else {
-          customDatesDiv.style.display = 'none';
-        }
-        renderRecordsContent();
-      };
-
-      startDateInput.onchange = renderRecordsContent;
-      endDateInput.onchange = renderRecordsContent;
-      toggleTimeline.onchange = renderRecordsContent;
-
-      if (presetSelect.value === 'custom') {
-        customDatesDiv.style.display = 'flex';
-      } else {
-        customDatesDiv.style.display = 'none';
-      }
-      renderRecordsContent();
-    }
 
     container.innerHTML = `
       <div class="fade-in">
         <div class="controls-panel">
-          ${attendanceViewMode !== 'history' ? `
           <div class="form-group" style="margin-bottom: 0;">
             <label for="att-date-picker">Attendance Date</label>
             <input type="date" id="att-date-picker" value="${selectedAttendanceDate}" style="margin-bottom: 0;">
           </div>
-          ` : ''}
           
           ${attendanceViewMode === 'list' ? `
             <div class="search-input-wrapper" style="max-width: 250px; margin-bottom: 0;">
@@ -1307,11 +896,8 @@ async function renderAttendance(container) {
           <div class="btn-group" style="margin-left: auto;">
             <button id="att-mode-calendar" class="btn btn-outline ${attendanceViewMode === 'calendar' ? 'active' : ''}"><i class="fa-solid fa-calendar-days"></i> Calendar</button>
             <button id="att-mode-list" class="btn btn-outline ${attendanceViewMode === 'list' ? 'active' : ''}"><i class="fa-solid fa-list-check"></i> Daily Sheet</button>
-            <button id="att-mode-history" class="btn btn-outline ${attendanceViewMode === 'history' ? 'active' : ''}"><i class="fa-solid fa-clock-rotate-left"></i> History Log</button>
           </div>
-          ${(attendanceViewMode !== 'history' && !isLocked) ? `
-          <button id="mark-attendance-btn" class="btn btn-primary"><i class="fa-solid fa-check-double"></i> Mark Single</button>
-          ` : ''}
+          <button id="mark-attendance-btn" class="btn btn-primary" ${isLocked ? 'disabled' : ''}><i class="fa-solid fa-check-double"></i> Mark Single</button>
         </div>
 
         <div class="grid-container" id="attendance-display-container">
@@ -1320,13 +906,11 @@ async function renderAttendance(container) {
       </div>
     `;
 
-    if (attendanceViewMode !== 'history') {
-      document.getElementById('att-date-picker').addEventListener('change', (e) => {
-        selectedAttendanceDate = e.target.value;
-        attendanceViewMode = 'list'; 
-        renderAttendance(container);
-      });
-    }
+    document.getElementById('att-date-picker').addEventListener('change', (e) => {
+      selectedAttendanceDate = e.target.value;
+      attendanceViewMode = 'list'; 
+      renderAttendance(container);
+    });
 
     document.getElementById('att-mode-calendar').addEventListener('click', () => {
       attendanceViewMode = 'calendar';
@@ -1334,10 +918,6 @@ async function renderAttendance(container) {
     });
     document.getElementById('att-mode-list').addEventListener('click', () => {
       attendanceViewMode = 'list';
-      renderAttendance(container);
-    });
-    document.getElementById('att-mode-history').addEventListener('click', () => {
-      attendanceViewMode = 'history';
       renderAttendance(container);
     });
 
