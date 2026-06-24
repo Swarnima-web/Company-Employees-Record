@@ -597,6 +597,7 @@ button, input, select, textarea {
   letter-spacing: -0.5px;
 }
 .sidebar-expand-trigger {
+  display: none; /* Hide on desktop */
   background: none;
   border: none;
   color: var(--text-primary);
