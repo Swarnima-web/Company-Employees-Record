@@ -46,6 +46,7 @@
             <strong>Demo Accounts:</strong><br>
             • Admin: <code>admin</code> / <code>admin123</code><br>
             • HR Manager: <code>hr</code> / <code>hr123</code><br>
+            • Supervisor: <code>supervisor</code> / <code>supervisor123</code><br>
             • Accountant: <code>accountant</code> / <code>accountant123</code>
           </div>
           <div id="login-error" class="error-message hidden">
@@ -210,9 +211,39 @@
             <div class="form-group col-6">
               <label for="emp-monthly-salary">Monthly Salary *</label>
               <div class="currency-input-wrapper">
-                <span class="currency-symbol">$</span>
-                <input type="number" id="emp-monthly-salary" min="0" required placeholder="e.g. 5000">
+                <span class="currency-symbol">₹</span>
+                <input type="number" id="emp-monthly-salary" min="0" required placeholder="e.g. 50000">
               </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="emp-phone">Phone Number</label>
+              <input type="tel" id="emp-phone" placeholder="e.g. +91 98765 43210">
+            </div>
+            <div class="form-group col-6">
+              <label for="emp-email">Email Address</label>
+              <input type="email" id="emp-email" placeholder="e.g. sarah.chen@company.com">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="emp-dob">Date of Birth</label>
+              <input type="date" id="emp-dob">
+            </div>
+            <div class="form-group col-6">
+              <label for="emp-gender">Gender</label>
+              <select id="emp-gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-12">
+              <label for="emp-address">Current Residential Address</label>
+              <input type="text" id="emp-address" placeholder="e.g. Flat 402, Bandra West, Mumbai">
             </div>
           </div>
         </div>
@@ -234,8 +265,12 @@
       <form id="attendance-form">
         <div class="modal-body">
           <div class="form-group">
-            <label for="att-employee-select">Select Employee</label>
-            <select id="att-employee-select" required></select>
+            <label for="att-employee-search-input">Search Employee *</label>
+            <div class="autocomplete-container">
+              <input type="text" id="att-employee-search-input" placeholder="Type employee ID or Name..." required autocomplete="off" class="form-control">
+              <input type="hidden" id="att-employee-id" name="employee_id" required>
+              <div id="att-employee-suggestions" class="autocomplete-suggestions hidden"></div>
+            </div>
           </div>
           <div class="form-group">
             <label for="att-date">Date</label>
@@ -251,6 +286,10 @@
               <label class="radio-box halfday">
                 <input type="radio" name="att-status" value="Half Day">
                 <span class="radio-label"><i class="fa-solid fa-circle-pause"></i> Half Day</span>
+              </label>
+              <label class="radio-box leave">
+                <input type="radio" name="att-status" value="Leave">
+                <span class="radio-label"><i class="fa-solid fa-plane-departure"></i> Leave</span>
               </label>
               <label class="radio-box absent">
                 <input type="radio" name="att-status" value="Absent">
@@ -277,8 +316,12 @@
       <form id="overtime-form">
         <div class="modal-body">
           <div class="form-group">
-            <label for="ot-employee-select">Select Employee</label>
-            <select id="ot-employee-select" required></select>
+            <label for="ot-employee-search-input">Search Employee *</label>
+            <div class="autocomplete-container">
+              <input type="text" id="ot-employee-search-input" placeholder="Type employee ID or Name..." required autocomplete="off" class="form-control">
+              <input type="hidden" id="ot-employee-id" name="employee_id" required>
+              <div id="ot-employee-suggestions" class="autocomplete-suggestions hidden"></div>
+            </div>
           </div>
           <div class="form-group">
             <label for="ot-date">Date</label>

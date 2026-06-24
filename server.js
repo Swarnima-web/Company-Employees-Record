@@ -217,49 +217,62 @@ app.get('/api/analytics/dashboard', (req, res) => {
   const salaries = db.salaries.getAll();
   const settings = db.settings.get();
 
-  const todayStr = new Date().toISOString().split('T')[0];
-  
-  // June 2026 is the mock current month
+  const todayStr = '2026-06-24'; // System today
   const targetMonth = '2026-06';
   
-  // 1. Total Employees
   const totalEmployees = employees.length;
 
-  // 2. Present Today
   const todayAttendance = attendance.filter(a => a.date === todayStr);
-  const presentToday = todayAttendance.filter(a => a.status === 'Present').length;
-  const halfDayToday = todayAttendance.filter(a => a.status === 'Half Day').length;
+  const presentToday = todayAttendance.filter(a => a.status === 'Present' || a.status === 'Half Day').length;
+  const absentToday = todayAttendance.filter(a => a.status === 'Absent').length + (totalEmployees - todayAttendance.length);
+  const leaveToday = todayAttendance.filter(a => a.status === 'Leave').length;
 
-  // 3. Absent Today
-  const absentToday = todayAttendance.filter(a => a.status === 'Absent').length + 
-    (totalEmployees - todayAttendance.length); // Assume unmarked are absent/not marked yet
+  let dailyExpenses = 0;
+  employees.forEach(emp => {
+    const att = todayAttendance.find(a => a.employee_id === emp.employee_id);
+    let factor = 0;
+    if (att) {
+      if (att.status === 'Present') factor = 1;
+      else if (att.status === 'Half Day') factor = 0.5;
+    }
+    const dailySalary = (emp.monthly_salary / 30) * factor;
+    const otToday = overtime.filter(o => o.employee_id === emp.employee_id && o.date === todayStr);
+    const otHours = otToday.reduce((sum, o) => sum + o.overtime_hours, 0);
+    const otPay = otHours * settings.overtimeRate;
+    dailyExpenses += (dailySalary + otPay);
+  });
 
-  // 4. Overtime Employees
-  const todayOvertime = overtime.filter(o => o.date === todayStr);
-  const overtimeTodayCount = todayOvertime.length;
+  let monthlyExpenses = 0;
+  employees.forEach(emp => {
+    const empAttendance = attendance.filter(a => a.employee_id === emp.employee_id && a.date.startsWith(targetMonth));
+    let present_days = 0;
+    empAttendance.forEach(a => {
+      if (a.status === 'Present') present_days += 1;
+      else if (a.status === 'Half Day') present_days += 0.5;
+    });
+    const empOvertime = overtime.filter(o => o.employee_id === emp.employee_id && o.date.startsWith(targetMonth));
+    let overtime_hours = 0;
+    empOvertime.forEach(o => {
+      overtime_hours += o.overtime_hours;
+    });
+    const daily_salary = emp.monthly_salary / 30;
+    const attendance_pay = present_days * daily_salary;
+    const overtime_pay = overtime_hours * settings.overtimeRate;
+    monthlyExpenses += Math.round(attendance_pay + overtime_pay);
+  });
 
-  // 5. Monthly Salary Expense
-  // Use previous month (2026-05) if current month not calculated, or calculate current month expense
-  const juneSalaries = salaries.filter(s => s.month === targetMonth);
-  const maySalaries = salaries.filter(s => s.month === '2026-05');
-  const activeSalaryList = juneSalaries.length > 0 ? juneSalaries : maySalaries;
-  const monthlySalaryExpense = activeSalaryList.reduce((sum, s) => sum + s.final_salary, 0);
-
-  // 6. Attendance Analytics (Breakdown for June 2026)
   const juneAttendance = attendance.filter(a => a.date.startsWith(targetMonth));
-  const attStats = { Present: 0, Absent: 0, 'Half Day': 0 };
+  const attStats = { Present: 0, Absent: 0, 'Half Day': 0, Leave: 0 };
   juneAttendance.forEach(a => {
     if (attStats[a.status] !== undefined) attStats[a.status]++;
   });
 
-  // 7. Salary Distribution by Department
   const deptSalary = {};
   employees.forEach(emp => {
     if (!deptSalary[emp.department]) deptSalary[emp.department] = 0;
     deptSalary[emp.department] += emp.monthly_salary;
   });
 
-  // 8. Overtime Trends (Overtime hours per day in June 2026)
   const overtimeDailyTrend = {};
   const juneOvertime = overtime.filter(o => o.date.startsWith(targetMonth));
   juneOvertime.forEach(o => {
@@ -268,7 +281,6 @@ app.get('/api/analytics/dashboard', (req, res) => {
     overtimeDailyTrend[day] += o.overtime_hours;
   });
 
-  // 9. Top 5 Employees by Productivity Score
   const employeeProductivity = employees.map(emp => {
     const prod = calculateProductivity(emp.employee_id, targetMonth);
     return {
@@ -290,10 +302,11 @@ app.get('/api/analytics/dashboard', (req, res) => {
   res.json({
     widgets: {
       totalEmployees,
-      presentToday: presentToday + halfDayToday * 0.5,
+      presentToday,
       absentToday,
-      overtimeEmployees: overtimeTodayCount,
-      monthlySalaryExpense
+      leaveToday,
+      dailyExpenses: Math.round(dailyExpenses),
+      monthlyExpenses: Math.round(monthlyExpenses)
     },
     charts: {
       attendance: attStats,

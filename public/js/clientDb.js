@@ -28,7 +28,12 @@
           position: 'Lead Software Engineer',
           department: 'Engineering',
           joining_date: '2024-01-15',
-          monthly_salary: 95000
+          monthly_salary: 95000,
+          phone: '+91 98765 43210',
+          email: 'sarah.chen@company.com',
+          address: 'Flat 402, Sea Green Apartments, Bandra West, Mumbai',
+          dob: '1992-08-24',
+          gender: 'Female'
         },
         {
           employee_id: 'EMP002',
@@ -37,7 +42,12 @@
           position: 'HR Manager',
           department: 'Human Resources',
           joining_date: '2024-03-10',
-          monthly_salary: 75000
+          monthly_salary: 75000,
+          phone: '+91 98765 43211',
+          email: 'alex.t@company.com',
+          address: '12, Park Street, Kolkata',
+          dob: '1989-11-15',
+          gender: 'Male'
         },
         {
           employee_id: 'EMP003',
@@ -46,7 +56,12 @@
           position: 'Financial Analyst',
           department: 'Finance',
           joining_date: '2024-06-01',
-          monthly_salary: 82000
+          monthly_salary: 82000,
+          phone: '+91 98765 43212',
+          email: 'michael.d@company.com',
+          address: 'Apartment 101, Prestige Heights, Bangalore',
+          dob: '1994-04-05',
+          gender: 'Male'
         },
         {
           employee_id: 'EMP004',
@@ -55,7 +70,12 @@
           position: 'UX Designer',
           department: 'Product Design',
           joining_date: '2025-02-18',
-          monthly_salary: 68000
+          monthly_salary: 68000,
+          phone: '+91 98765 43213',
+          email: 'emily.chen@company.com',
+          address: 'Plot 45, Jubilee Hills, Hyderabad',
+          dob: '1996-01-20',
+          gender: 'Female'
         },
         {
           employee_id: 'EMP005',
@@ -64,7 +84,12 @@
           position: 'Marketing Specialist',
           department: 'Marketing',
           joining_date: '2025-05-20',
-          monthly_salary: 58000
+          monthly_salary: 58000,
+          phone: '+91 98765 43214',
+          email: 'marcus.v@company.com',
+          address: 'House 89, Sector 15, Noida',
+          dob: '1991-05-18',
+          gender: 'Male'
         }
       ],
       attendance: [],
@@ -97,6 +122,8 @@
           status = 'Absent';
         } else if (rand < 0.12) {
           status = 'Half Day';
+        } else if (rand < 0.18) {
+          status = 'Leave';
         }
 
         initialDb.attendance.push({
@@ -218,11 +245,12 @@
       const validAccounts = {
         admin: { fullName: 'System Admin', role: 'admin' },
         hr: { fullName: 'HR Manager', role: 'hr' },
+        supervisor: { fullName: 'Shift Supervisor', role: 'supervisor' },
         accountant: { fullName: 'Company Accountant', role: 'accountant' }
       };
 
       const user = validAccounts[username.toLowerCase()];
-      if (user && (password === username + '123' || password === 'admin123')) {
+      if (user && (password === username + '123' || password === 'admin123' || (username === 'supervisor' && password === 'supervisor123'))) {
         return { success: true, user: { username, ...user } };
       }
       throw new Error('Invalid username or password');
@@ -246,7 +274,12 @@
         position: body.position,
         department: body.department,
         joining_date: body.joining_date || new Date().toISOString().split('T')[0],
-        monthly_salary: parseFloat(body.monthly_salary) || 0
+        monthly_salary: parseFloat(body.monthly_salary) || 0,
+        phone: body.phone || '',
+        email: body.email || '',
+        address: body.address || '',
+        dob: body.dob || '',
+        gender: body.gender || 'Male'
       };
 
       db.employees.push(newEmp);
@@ -267,7 +300,12 @@
         position: body.position,
         department: body.department,
         joining_date: body.joining_date,
-        monthly_salary: parseFloat(body.monthly_salary) || 0
+        monthly_salary: parseFloat(body.monthly_salary) || 0,
+        phone: body.phone || '',
+        email: body.email || '',
+        address: body.address || '',
+        dob: body.dob || '',
+        gender: body.gender || 'Male'
       };
 
       writeDb(db);
@@ -297,6 +335,11 @@
     // 7. POST /api/attendance
     if (pathname === '/api/attendance' && method === 'POST') {
       const { employee_id, date, status } = body;
+      const todayStr = '2026-06-24';
+      if (date < todayStr) {
+        throw new Error('Attendance records for past dates are locked and cannot be modified.');
+      }
+      
       const recordIndex = db.attendance.findIndex(
         a => a.employee_id === employee_id && a.date === date
       );
@@ -323,6 +366,11 @@
     // 8. POST /api/attendance/bulk
     if (pathname === '/api/attendance/bulk' && method === 'POST') {
       const { date, records } = body;
+      const todayStr = '2026-06-24';
+      if (date < todayStr) {
+        throw new Error('Attendance records for past dates are locked and cannot be modified.');
+      }
+      
       let ids = db.attendance.map(a => parseInt(a.attendance_id.replace('ATT', '')));
       let maxId = ids.length > 0 ? Math.max(...ids) : 0;
 
@@ -483,19 +531,46 @@
       const totalEmployees = db.employees.length;
 
       const todayAttendance = db.attendance.filter(a => a.date === todayStr);
-      const presentToday = todayAttendance.filter(a => a.status === 'Present').length;
-      const halfDayToday = todayAttendance.filter(a => a.status === 'Half Day').length;
+      const presentToday = todayAttendance.filter(a => a.status === 'Present' || a.status === 'Half Day').length;
       const absentToday = todayAttendance.filter(a => a.status === 'Absent').length + (totalEmployees - todayAttendance.length);
+      const leaveToday = todayAttendance.filter(a => a.status === 'Leave').length;
 
-      const overtimeTodayCount = db.overtime.filter(o => o.date === todayStr).length;
+      let dailyExpenses = 0;
+      db.employees.forEach(emp => {
+        const att = todayAttendance.find(a => a.employee_id === emp.employee_id);
+        let factor = 0;
+        if (att) {
+          if (att.status === 'Present') factor = 1;
+          else if (att.status === 'Half Day') factor = 0.5;
+        }
+        const dailySalary = (emp.monthly_salary / 30) * factor;
+        const otToday = db.overtime.filter(o => o.employee_id === emp.employee_id && o.date === todayStr);
+        const otHours = otToday.reduce((sum, o) => sum + o.overtime_hours, 0);
+        const otPay = otHours * db.settings.overtimeRate;
+        dailyExpenses += (dailySalary + otPay);
+      });
 
-      const juneSalaries = db.salaries.filter(s => s.month === targetMonth);
-      const maySalaries = db.salaries.filter(s => s.month === '2026-05');
-      const activeSalaryList = juneSalaries.length > 0 ? juneSalaries : maySalaries;
-      const monthlySalaryExpense = activeSalaryList.reduce((sum, s) => sum + s.final_salary, 0);
+      let monthlyExpenses = 0;
+      db.employees.forEach(emp => {
+        const empAttendance = db.attendance.filter(a => a.employee_id === emp.employee_id && a.date.startsWith(targetMonth));
+        let present_days = 0;
+        empAttendance.forEach(a => {
+          if (a.status === 'Present') present_days += 1;
+          else if (a.status === 'Half Day') present_days += 0.5;
+        });
+        const empOvertime = db.overtime.filter(o => o.employee_id === emp.employee_id && o.date.startsWith(targetMonth));
+        let overtime_hours = 0;
+        empOvertime.forEach(o => {
+          overtime_hours += o.overtime_hours;
+        });
+        const daily_salary = emp.monthly_salary / 30;
+        const attendance_pay = present_days * daily_salary;
+        const overtime_pay = overtime_hours * db.settings.overtimeRate;
+        monthlyExpenses += Math.round(attendance_pay + overtime_pay);
+      });
 
       const juneAttendance = db.attendance.filter(a => a.date.startsWith(targetMonth));
-      const attStats = { Present: 0, Absent: 0, 'Half Day': 0 };
+      const attStats = { Present: 0, Absent: 0, 'Half Day': 0, Leave: 0 };
       juneAttendance.forEach(a => {
         if (attStats[a.status] !== undefined) attStats[a.status]++;
       });
@@ -535,10 +610,11 @@
       return {
         widgets: {
           totalEmployees,
-          presentToday: presentToday + halfDayToday * 0.5,
+          presentToday,
           absentToday,
-          overtimeEmployees: overtimeTodayCount,
-          monthlySalaryExpense
+          leaveToday,
+          dailyExpenses: Math.round(dailyExpenses),
+          monthlyExpenses: Math.round(monthlyExpenses)
         },
         charts: {
           attendance: attStats,

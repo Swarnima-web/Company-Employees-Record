@@ -44,6 +44,13 @@ function checkAuth() {
   return false;
 }
 
+const rolePages = {
+  admin: ['dashboard', 'employees', 'attendance', 'overtime', 'payroll', 'salary-slip', 'reports', 'top-performers', 'settings'],
+  hr: ['dashboard', 'employees', 'attendance', 'overtime', 'salary-slip'],
+  supervisor: ['dashboard', 'attendance', 'overtime'],
+  accountant: ['dashboard', 'payroll', 'salary-slip', 'reports']
+};
+
 function setupSessionUI() {
   document.getElementById('login-container').classList.add('hidden');
   document.getElementById('app-container').classList.remove('hidden');
@@ -53,10 +60,16 @@ function setupSessionUI() {
   const roleBadge = document.getElementById('user-display-role');
   roleBadge.textContent = state.user.role.toUpperCase();
   
-  // Adjust permissions based on role
-  if (state.user.role === 'accountant') {
-    // Hide employee management options or mark them read-only if desired
-  }
+  // Adjust permissions based on role (hide restricted links)
+  const allowed = rolePages[state.user.role] || ['dashboard'];
+  document.querySelectorAll('.sidebar-menu .menu-item').forEach(item => {
+    const pageId = item.getAttribute('data-page');
+    if (allowed.includes(pageId)) {
+      item.classList.remove('hidden');
+    } else {
+      item.classList.add('hidden');
+    }
+  });
 }
 
 function showLoginPage() {
@@ -78,6 +91,14 @@ const routes = {
 };
 
 function navigate(pageId) {
+  if (state.user) {
+    const allowed = rolePages[state.user.role] || ['dashboard'];
+    if (!allowed.includes(pageId)) {
+      window.location.hash = allowed[0] || 'dashboard';
+      return;
+    }
+  }
+
   state.activePage = pageId;
   
   // Update sidebar active link
@@ -207,33 +228,51 @@ async function renderDashboard(container) {
           </div>
         </div>
 
-        <!-- Stat Widgets Row -->
+        <!-- Stat Widgets Row 1 -->
         <div class="grid-container">
-          <div class="col-3 card stat-card cyan">
+          <div class="col-4 card stat-card cyan clickable-stat" data-filter="all">
             <div class="stat-details">
               <h3>Total Employees</h3>
               <div class="stat-number animated-counter" data-target="${data.widgets.totalEmployees}">0</div>
             </div>
             <div class="stat-icon-box"><i class="fa-solid fa-users-viewfinder"></i></div>
           </div>
-          <div class="col-3 card stat-card success">
+          <div class="col-4 card stat-card success clickable-stat" data-filter="Present">
             <div class="stat-details">
               <h3>Present Today</h3>
               <div class="stat-number animated-counter" data-target="${data.widgets.presentToday}">0</div>
             </div>
             <div class="stat-icon-box"><i class="fa-solid fa-user-check"></i></div>
           </div>
-          <div class="col-3 card stat-card danger">
+          <div class="col-4 card stat-card danger clickable-stat" data-filter="Absent">
             <div class="stat-details">
               <h3>Absent Today</h3>
               <div class="stat-number animated-counter" data-target="${data.widgets.absentToday}">0</div>
             </div>
             <div class="stat-icon-box"><i class="fa-solid fa-user-slash"></i></div>
           </div>
-          <div class="col-3 card stat-card warning">
+        </div>
+
+        <!-- Stat Widgets Row 2 -->
+        <div class="grid-container">
+          <div class="col-4 card stat-card leave clickable-stat" data-filter="Leave">
             <div class="stat-details">
-              <h3>Monthly Salary Expense</h3>
-              <div class="stat-number animated-counter-currency" data-target="${data.widgets.monthlySalaryExpense}">0</div>
+              <h3>Employee on Leave</h3>
+              <div class="stat-number animated-counter" data-target="${data.widgets.leaveToday}">0</div>
+            </div>
+            <div class="stat-icon-box"><i class="fa-solid fa-plane-departure"></i></div>
+          </div>
+          <div class="col-4 card stat-card warning">
+            <div class="stat-details">
+              <h3>Daily Expenses</h3>
+              <div class="stat-number animated-counter-currency" data-target="${data.widgets.dailyExpenses}">0</div>
+            </div>
+            <div class="stat-icon-box"><i class="fa-solid fa-wallet"></i></div>
+          </div>
+          <div class="col-4 card stat-card info">
+            <div class="stat-details">
+              <h3>Monthly Expenses</h3>
+              <div class="stat-number animated-counter-currency" data-target="${data.widgets.monthlyExpenses}">0</div>
             </div>
             <div class="stat-icon-box"><i class="fa-solid fa-sack-dollar"></i></div>
           </div>
@@ -291,7 +330,7 @@ async function renderDashboard(container) {
                         <div class="table-avatar-cell">
                           <img src="${emp.photo}" class="table-avatar" alt="Avatar">
                           <div>
-                            <div class="emp-name-bold">${emp.full_name}</div>
+                            <div class="emp-name-bold">[${emp.employee_id}] ${emp.full_name}</div>
                             <div class="emp-id-sub">${emp.position}</div>
                           </div>
                         </div>
@@ -315,6 +354,15 @@ async function renderDashboard(container) {
     UIComponents.charts.attendanceBreakdown('attendanceChart', data.charts.attendance);
     UIComponents.charts.overtimeTrends('overtimeTrendChart', data.charts.overtimeTrends);
 
+    // Setup card redirect filters
+    container.querySelectorAll('.clickable-stat').forEach(card => {
+      card.addEventListener('click', () => {
+        const filter = card.getAttribute('data-filter');
+        state.employeeFilter = filter;
+        window.location.hash = 'employees';
+      });
+    });
+
   } catch (err) {
     container.innerHTML = `<div class="error-panel"><i class="fa-solid fa-circle-exclamation"></i> Error loading dashboard.</div>`;
   }
@@ -324,9 +372,15 @@ async function renderDashboard(container) {
 let employeeViewMode = 'grid'; // 'grid' or 'table'
 async function renderEmployees(container) {
   try {
-    const employees = await apiCall('/api/employees');
-    const targetMonth = '2026-06';
-    
+    const todayStr = '2026-06-24';
+    const [employees, allAttendance, allOvertime, settings] = await Promise.all([
+      apiCall('/api/employees'),
+      apiCall('/api/attendance'),
+      apiCall('/api/overtime'),
+      apiCall('/api/settings')
+    ]);
+    state.settings = settings;
+
     // Fetch productivity scores to display on profile cards
     const rankings = await apiCall('/api/analytics/top-performers');
     const scoreMap = {};
@@ -334,16 +388,61 @@ async function renderEmployees(container) {
       scoreMap[r.employee_id] = r.productivityScore;
     });
 
+    // Enrich employees with computed metrics
+    const enriched = employees.map(emp => {
+      // 1. Today's Status
+      const todayAtt = allAttendance.find(a => a.employee_id === emp.employee_id && a.date === todayStr);
+      const statusToday = todayAtt ? todayAtt.status : 'Absent';
+      
+      let badgeClass = 'badge-absent';
+      if (statusToday === 'Present') badgeClass = 'badge-present';
+      else if (statusToday === 'Half Day') badgeClass = 'badge-halfday';
+      else if (statusToday === 'Leave') badgeClass = 'badge-leave';
+
+      // 2. Monthly Summary (June 2026)
+      const monthAtt = allAttendance.filter(a => a.employee_id === emp.employee_id && a.date.startsWith('2026-06'));
+      const presentCount = monthAtt.filter(a => a.status === 'Present').length;
+      const halfCount = monthAtt.filter(a => a.status === 'Half Day').length;
+      const absentCount = monthAtt.filter(a => a.status === 'Absent').length;
+      const leaveCount = monthAtt.filter(a => a.status === 'Leave').length;
+
+      const overtimeHours = allOvertime
+        .filter(o => o.employee_id === emp.employee_id && o.date.startsWith('2026-06'))
+        .reduce((sum, o) => sum + o.overtime_hours, 0);
+
+      // 3. Income
+      const baseSalary = emp.monthly_salary;
+      const dailySalary = baseSalary / 30;
+      const presentDays = presentCount + (halfCount * 0.5);
+      const attendancePay = Math.round(presentDays * dailySalary);
+      const overtimePay = overtimeHours * settings.overtimeRate;
+      const estEarnings = attendancePay + overtimePay;
+
+      return {
+        ...emp,
+        statusToday,
+        badgeClass,
+        presentCount,
+        halfCount,
+        absentCount,
+        leaveCount,
+        overtimeHours,
+        estEarnings
+      };
+    });
+
     const renderContents = () => {
       const searchVal = document.getElementById('emp-search').value.toLowerCase();
       const deptVal = document.getElementById('emp-dept-filter').value;
+      const statusVal = document.getElementById('emp-status-filter').value;
 
-      const filtered = employees.filter(emp => {
+      const filtered = enriched.filter(emp => {
         const matchesSearch = emp.full_name.toLowerCase().includes(searchVal) || 
                               emp.employee_id.toLowerCase().includes(searchVal) ||
                               emp.position.toLowerCase().includes(searchVal);
         const matchesDept = deptVal === '' || emp.department === deptVal;
-        return matchesSearch && matchesDept;
+        const matchesStatus = statusVal === '' || emp.statusToday === statusVal;
+        return matchesSearch && matchesDept && matchesStatus;
       });
 
       const listDiv = document.getElementById('employee-list-container');
@@ -353,7 +452,7 @@ async function renderEmployees(container) {
           <div class="empty-state-card col-12" style="text-align: center; padding: 40px;">
             <i class="fa-solid fa-users-slash" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 16px;"></i>
             <h3>No employees found</h3>
-            <p>Try modifying your search queries or department filters.</p>
+            <p>Try modifying your search queries or status filters.</p>
           </div>
         `;
         return;
@@ -365,32 +464,68 @@ async function renderEmployees(container) {
             ${filtered.map(emp => `
               <div class="card profile-card">
                 <div class="profile-card-header">
-                  <button class="action-icon-btn edit-emp-btn" data-id="${emp.employee_id}"><i class="fa-solid fa-pen-to-square"></i></button>
-                  <button class="action-icon-btn delete delete-emp-btn" data-id="${emp.employee_id}"><i class="fa-solid fa-trash-can"></i></button>
+                  <span class="badge badge-neutral">Index: ${scoreMap[emp.employee_id] || 100}</span>
+                  <div style="margin-left: auto; display: flex; gap: 6px;">
+                    <button class="action-icon-btn edit-emp-btn" data-id="${emp.employee_id}"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="action-icon-btn delete delete-emp-btn" data-id="${emp.employee_id}"><i class="fa-solid fa-trash-can"></i></button>
+                  </div>
                 </div>
                 <img src="${emp.photo}" alt="Avatar" class="profile-avatar">
-                <h3>${emp.full_name}</h3>
-                <p class="profile-position">${emp.position}</p>
-                <div class="profile-details-list">
-                  <div class="profile-detail-row">
-                    <span>ID</span>
-                    <span>${emp.employee_id}</span>
+                <h3>[${emp.employee_id}] ${emp.full_name}</h3>
+                <p class="profile-position">${emp.position} • ${emp.department}</p>
+                
+                <!-- Today's Status -->
+                <div class="profile-status-today">
+                  <span>Today's Status:</span>
+                  <span class="badge ${emp.badgeClass}">${emp.statusToday}</span>
+                </div>
+
+                <!-- Personal Biodata -->
+                <div class="profile-biodata-section">
+                  <h4 class="section-title"><i class="fa-solid fa-address-card"></i> Personal Biodata</h4>
+                  <div class="biodata-item"><i class="fa-solid fa-phone"></i> Phone: ${emp.phone || 'N/A'}</div>
+                  <div class="biodata-item"><i class="fa-solid fa-envelope"></i> Email: ${emp.email || 'N/A'}</div>
+                  <div class="biodata-item"><i class="fa-solid fa-calendar-day"></i> DOB: ${emp.dob || 'N/A'} (${emp.gender || 'N/A'})</div>
+                  <div class="biodata-item" title="${emp.address || 'N/A'}" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;"><i class="fa-solid fa-map-location-dot"></i> Addr: ${emp.address || 'N/A'}</div>
+                </div>
+
+                <!-- Monthly Summary -->
+                <div class="profile-monthly-section">
+                  <h4 class="section-title"><i class="fa-solid fa-calendar-days"></i> Summary (June 2026)</h4>
+                  <div class="monthly-grid">
+                    <div class="monthly-stat present" title="Present Days">
+                      <span class="stat-val">${emp.presentCount}</span>
+                      <span class="stat-lbl">Pres</span>
+                    </div>
+                    <div class="monthly-stat halfday" title="Half Days">
+                      <span class="stat-val">${emp.halfCount}</span>
+                      <span class="stat-lbl">Half</span>
+                    </div>
+                    <div class="monthly-stat leave" title="Leave Days">
+                      <span class="stat-val">${emp.leaveCount}</span>
+                      <span class="stat-lbl">Leave</span>
+                    </div>
+                    <div class="monthly-stat absent" title="Absent Days">
+                      <span class="stat-val">${emp.absentCount}</span>
+                      <span class="stat-lbl">Abs</span>
+                    </div>
                   </div>
-                  <div class="profile-detail-row">
-                    <span>Department</span>
-                    <span>${emp.department}</span>
+                  <div class="overtime-stat-row">
+                    <span>Overtime Hours:</span>
+                    <strong>${emp.overtimeHours} hrs</strong>
                   </div>
-                  <div class="profile-detail-row">
-                    <span>Joining Date</span>
-                    <span>${emp.joining_date}</span>
+                </div>
+
+                <!-- Income Information -->
+                <div class="profile-income-section">
+                  <h4 class="section-title"><i class="fa-solid fa-wallet"></i> Salary & Income</h4>
+                  <div class="income-row">
+                    <span>Base Salary:</span>
+                    <strong>${settings.currencySymbol}${emp.monthly_salary.toLocaleString()}</strong>
                   </div>
-                  <div class="profile-detail-row">
-                    <span>Monthly Salary</span>
-                    <span>${state.settings.currencySymbol}${emp.monthly_salary.toLocaleString()}</span>
-                  </div>
-                  <div class="profile-detail-row">
-                    <span>Productivity Index</span>
-                    <span class="prod-score-badge">${scoreMap[emp.employee_id] || 100}</span>
+                  <div class="income-row">
+                    <span>Est. June Earnings:</span>
+                    <strong class="earnings-highlight">${settings.currencySymbol}${emp.estEarnings.toLocaleString()}</strong>
                   </div>
                 </div>
               </div>
@@ -404,11 +539,10 @@ async function renderEmployees(container) {
               <thead>
                 <tr>
                   <th>Employee</th>
-                  <th>ID</th>
-                  <th>Department</th>
-                  <th>Joining Date</th>
-                  <th>Salary</th>
-                  <th>Productivity</th>
+                  <th>Today's Status</th>
+                  <th>Personal Biodata</th>
+                  <th>Monthly Summary (June)</th>
+                  <th>Salary / Income</th>
                   <th style="text-align: right;">Actions</th>
                 </tr>
               </thead>
@@ -418,14 +552,33 @@ async function renderEmployees(container) {
                     <td>
                       <div class="table-avatar-cell">
                         <img src="${emp.photo}" class="table-avatar" alt="Avatar">
-                        <span class="emp-name-bold">${emp.full_name}</span>
+                        <div>
+                          <span class="emp-name-bold">[${emp.employee_id}] ${emp.full_name}</span>
+                          <div class="emp-id-sub">${emp.position} • ${emp.department}</div>
+                        </div>
                       </div>
                     </td>
-                    <td><code>${emp.employee_id}</code></td>
-                    <td>${emp.department}</td>
-                    <td>${emp.joining_date}</td>
-                    <td><strong>${state.settings.currencySymbol}${emp.monthly_salary.toLocaleString()}</strong></td>
-                    <td><span class="badge badge-success">${scoreMap[emp.employee_id] || 100}</span></td>
+                    <td><span class="badge ${emp.badgeClass}">${emp.statusToday}</span></td>
+                    <td>
+                      <div style="font-size: 0.75rem; display: flex; flex-direction: column; gap: 2px;">
+                        <span><i class="fa-solid fa-phone"></i> ${emp.phone || 'N/A'}</span>
+                        <span><i class="fa-solid fa-envelope"></i> ${emp.email || 'N/A'}</span>
+                        <span><i class="fa-solid fa-calendar-day"></i> DOB: ${emp.dob || 'N/A'} (${emp.gender || 'N/A'})</span>
+                        <span style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><i class="fa-solid fa-map-location-dot"></i> ${emp.address || 'N/A'}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div style="font-size: 0.75rem;">
+                        <div>P: <strong>${emp.presentCount}</strong> | H: <strong>${emp.halfCount}</strong> | L: <strong>${emp.leaveCount}</strong> | A: <strong>${emp.absentCount}</strong></div>
+                        <div>Overtime: <strong>${emp.overtimeHours} hrs</strong></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div style="font-size: 0.8rem;">
+                        <div>Base: <strong>${settings.currencySymbol}${emp.monthly_salary.toLocaleString()}</strong></div>
+                        <div style="color: var(--success-color);">Est: <strong>${settings.currencySymbol}${emp.estEarnings.toLocaleString()}</strong></div>
+                      </div>
+                    </td>
                     <td style="text-align: right;">
                       <button class="action-icon-btn edit-emp-btn" data-id="${emp.employee_id}"><i class="fa-solid fa-pen-to-square"></i></button>
                       <button class="action-icon-btn delete delete-emp-btn" data-id="${emp.employee_id}"><i class="fa-solid fa-trash-can"></i></button>
@@ -453,7 +606,7 @@ async function renderEmployees(container) {
         <div class="controls-panel">
           <div class="search-input-wrapper">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="emp-search" placeholder="Search employees by name, ID or role...">
+            <input type="text" id="emp-search" placeholder="Search employees by name, ID or position...">
           </div>
           <select id="emp-dept-filter" class="form-group filter-dropdown" style="margin-bottom: 0;">
             <option value="">All Departments</option>
@@ -463,6 +616,13 @@ async function renderEmployees(container) {
             <option value="Product Design">Product Design</option>
             <option value="Marketing">Marketing</option>
             <option value="Sales">Sales</option>
+          </select>
+          <select id="emp-status-filter" class="form-group filter-dropdown" style="margin-bottom: 0;">
+            <option value="">All Statuses</option>
+            <option value="Present">Present Today</option>
+            <option value="Absent">Absent Today</option>
+            <option value="Leave">On Leave Today</option>
+            <option value="Half Day">Half Day Today</option>
           </select>
           <div class="btn-group">
             <button id="view-mode-grid" class="btn btn-outline btn-sm ${employeeViewMode === 'grid' ? 'active' : ''}"><i class="fa-solid fa-grip"></i></button>
@@ -480,6 +640,7 @@ async function renderEmployees(container) {
     // Set up filter actions
     document.getElementById('emp-search').addEventListener('input', renderContents);
     document.getElementById('emp-dept-filter').addEventListener('change', renderContents);
+    document.getElementById('emp-status-filter').addEventListener('change', renderContents);
     
     document.getElementById('view-mode-grid').addEventListener('click', () => {
       employeeViewMode = 'grid';
@@ -493,6 +654,12 @@ async function renderEmployees(container) {
     document.getElementById('add-employee-btn').addEventListener('click', () => {
       openEmployeeForm();
     });
+
+    // Check if redirect filter exists
+    if (state.employeeFilter) {
+      document.getElementById('emp-status-filter').value = state.employeeFilter === 'all' ? '' : state.employeeFilter;
+      state.employeeFilter = null; // Clear
+    }
 
     renderContents();
 
@@ -509,6 +676,9 @@ async function renderAttendance(container) {
     const employees = await apiCall('/api/employees');
     const dateAtt = await apiCall(`/api/attendance?date=${selectedAttendanceDate}`);
     const allAttendance = await apiCall('/api/attendance');
+
+    const todayStr = '2026-06-24';
+    const isLocked = selectedAttendanceDate < todayStr;
 
     const renderContents = () => {
       const displayContainer = document.getElementById('attendance-display-container');
@@ -537,9 +707,18 @@ async function renderAttendance(container) {
             <div class="card-header">
               <h3 class="card-title">Mark Records for: <code>${selectedAttendanceDate}</code></h3>
               <div class="header-actions">
-                <button id="bulk-mark-btn" class="btn btn-primary btn-sm"><i class="fa-solid fa-floppy-disk"></i> Save Bulk Marking</button>
+                ${isLocked ? `
+                  <span class="badge badge-danger"><i class="fa-solid fa-lock"></i> Locked (Expired)</span>
+                ` : `
+                  <button id="bulk-mark-btn" class="btn btn-primary btn-sm"><i class="fa-solid fa-floppy-disk"></i> Save Bulk Marking</button>
+                `}
               </div>
             </div>
+            ${isLocked ? `
+              <div style="background: var(--danger-bg); color: var(--danger-color); padding: 12px; font-weight: 600; font-size: 0.85rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-circle-exclamation"></i> Past attendance sheets are expired and locked. Modification is disabled.
+              </div>
+            ` : ''}
             <div class="table-responsive">
               <table class="table-custom">
                 <thead>
@@ -549,7 +728,7 @@ async function renderAttendance(container) {
                     <th>Status Marking</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="attendance-table-body">
                   ${employees.map(emp => {
                     const record = dateAtt.find(a => a.employee_id === emp.employee_id);
                     const currentStatus = record ? record.status : 'Present';
@@ -558,22 +737,26 @@ async function renderAttendance(container) {
                         <td>
                           <div class="table-avatar-cell">
                             <img src="${emp.photo}" class="table-avatar" alt="Avatar">
-                            <span class="emp-name-bold">${emp.full_name}</span>
+                            <span class="emp-name-bold">[${emp.employee_id}] ${emp.full_name}</span>
                           </div>
                         </td>
                         <td><code>${emp.employee_id}</code></td>
                         <td>
                           <div class="radio-group-container" style="margin-top: 0;" data-employee="${emp.employee_id}">
                             <label class="radio-box present btn-sm">
-                              <input type="radio" name="status-${emp.employee_id}" value="Present" ${currentStatus === 'Present' ? 'checked' : ''}>
+                              <input type="radio" name="status-${emp.employee_id}" value="Present" ${currentStatus === 'Present' ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
                               <span class="radio-label"><i class="fa-solid fa-circle-check"></i> Present</span>
                             </label>
                             <label class="radio-box halfday btn-sm">
-                              <input type="radio" name="status-${emp.employee_id}" value="Half Day" ${currentStatus === 'Half Day' ? 'checked' : ''}>
+                              <input type="radio" name="status-${emp.employee_id}" value="Half Day" ${currentStatus === 'Half Day' ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
                               <span class="radio-label"><i class="fa-solid fa-circle-pause"></i> Half Day</span>
                             </label>
+                            <label class="radio-box leave btn-sm">
+                              <input type="radio" name="status-${emp.employee_id}" value="Leave" ${currentStatus === 'Leave' ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
+                              <span class="radio-label"><i class="fa-solid fa-plane-departure"></i> Leave</span>
+                            </label>
                             <label class="radio-box absent btn-sm">
-                              <input type="radio" name="status-${emp.employee_id}" value="Absent" ${currentStatus === 'Absent' ? 'checked' : ''}>
+                              <input type="radio" name="status-${emp.employee_id}" value="Absent" ${currentStatus === 'Absent' ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
                               <span class="radio-label"><i class="fa-solid fa-circle-xmark"></i> Absent</span>
                             </label>
                           </div>
@@ -587,7 +770,9 @@ async function renderAttendance(container) {
           </div>
         `;
 
-        document.getElementById('bulk-mark-btn').addEventListener('click', saveBulkAttendance);
+        if (!isLocked) {
+          document.getElementById('bulk-mark-btn').addEventListener('click', saveBulkAttendance);
+        }
       }
     };
 
@@ -598,11 +783,19 @@ async function renderAttendance(container) {
             <label for="att-date-picker">Attendance Date</label>
             <input type="date" id="att-date-picker" value="${selectedAttendanceDate}" style="margin-bottom: 0;">
           </div>
+          
+          ${attendanceViewMode === 'list' ? `
+            <div class="search-input-wrapper" style="max-width: 250px; margin-bottom: 0;">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="att-search-input" placeholder="Search by ID or Name..." style="margin-bottom: 0;">
+            </div>
+          ` : ''}
+          
           <div class="btn-group" style="margin-left: auto;">
             <button id="att-mode-calendar" class="btn btn-outline ${attendanceViewMode === 'calendar' ? 'active' : ''}"><i class="fa-solid fa-calendar-days"></i> Calendar</button>
             <button id="att-mode-list" class="btn btn-outline ${attendanceViewMode === 'list' ? 'active' : ''}"><i class="fa-solid fa-list-check"></i> Daily Sheet</button>
           </div>
-          <button id="mark-attendance-btn" class="btn btn-primary"><i class="fa-solid fa-check-double"></i> Mark Single</button>
+          <button id="mark-attendance-btn" class="btn btn-primary" ${isLocked ? 'disabled' : ''}><i class="fa-solid fa-check-double"></i> Mark Single</button>
         </div>
 
         <div class="grid-container" id="attendance-display-container">
@@ -613,7 +806,7 @@ async function renderAttendance(container) {
 
     document.getElementById('att-date-picker').addEventListener('change', (e) => {
       selectedAttendanceDate = e.target.value;
-      attendanceViewMode = 'list'; // Switch to list view on date change
+      attendanceViewMode = 'list'; 
       renderAttendance(container);
     });
 
@@ -626,11 +819,25 @@ async function renderAttendance(container) {
       renderAttendance(container);
     });
 
-    document.getElementById('mark-attendance-btn').addEventListener('click', () => {
-      openAttendanceModal(employees);
-    });
+    if (!isLocked) {
+      document.getElementById('mark-attendance-btn').addEventListener('click', () => {
+        openAttendanceModal(employees);
+      });
+    }
 
     renderContents();
+
+    // Bind local search if in sheet view
+    const searchInput = document.getElementById('att-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        document.querySelectorAll('#attendance-table-body tr').forEach(row => {
+          const text = row.innerText.toLowerCase();
+          row.style.display = text.includes(query) ? '' : 'none';
+        });
+      });
+    }
 
   } catch (err) {
     container.innerHTML = `<div class="error-panel">Error loading attendance logs.</div>`;
@@ -694,7 +901,7 @@ async function renderOvertime(container) {
                         <td>
                           <div class="table-avatar-cell">
                             <img src="${row.avatar}" class="table-avatar" alt="Avatar">
-                            <span class="emp-name-bold">${row.name}</span>
+                            <span class="emp-name-bold">[${empId}] ${row.name}</span>
                           </div>
                         </td>
                         <td>${row.dept}</td>
@@ -724,7 +931,7 @@ async function renderOvertime(container) {
                 return `
                   <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--bg-primary); border-radius: var(--border-radius-sm); border-left: 3px solid var(--warning-color);">
                     <div>
-                      <div class="emp-name-bold" style="font-size: 0.85rem;">${emp ? emp.full_name : 'Unknown'}</div>
+                      <div class="emp-name-bold" style="font-size: 0.85rem;">[${rec.employee_id}] ${emp ? emp.full_name : 'Unknown'}</div>
                       <div style="font-size: 0.75rem; color: var(--text-secondary);">${rec.date} • ${rec.overtime_hours} hrs</div>
                     </div>
                     <button class="action-icon-btn delete delete-ot-btn" data-id="${rec.overtime_id}"><i class="fa-solid fa-trash-can"></i></button>
@@ -774,6 +981,14 @@ async function renderPayroll(container) {
             <label for="payroll-month-picker">Payroll Month</label>
             <input type="month" id="payroll-month-picker" value="${selectedPayrollMonth}">
           </div>
+          
+          ${hasCalculated ? `
+            <div class="search-input-wrapper" style="max-width: 250px; margin-bottom: 0;">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="payroll-search" placeholder="Search by ID or Name..." style="margin-bottom: 0;">
+            </div>
+          ` : ''}
+
           <button id="calculate-payroll-btn" class="btn btn-cyan" style="margin-left: auto;">
             <i class="fa-solid fa-calculator"></i> Calculate Monthly Payroll
           </button>
@@ -809,7 +1024,7 @@ async function renderPayroll(container) {
                       <th style="text-align: right;">Action</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody id="payroll-table-body">
                     ${salaries.map(sal => {
                       const emp = employees.find(e => e.employee_id === sal.employee_id);
                       if (!emp) return '';
@@ -824,7 +1039,7 @@ async function renderPayroll(container) {
                             <div class="table-avatar-cell">
                               <img src="${emp.photo}" class="table-avatar" alt="Avatar">
                               <div>
-                                <span class="emp-name-bold">${emp.full_name}</span>
+                                <span class="emp-name-bold">[${emp.employee_id}] ${emp.full_name}</span>
                                 <div class="emp-id-sub">${emp.position}</div>
                               </div>
                             </div>
@@ -873,6 +1088,18 @@ async function renderPayroll(container) {
         state.selectedSalarySlipId = link.getAttribute('data-id');
       });
     });
+
+    // Bind search functionality
+    const searchInput = document.getElementById('payroll-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        document.querySelectorAll('#payroll-table-body tr').forEach(row => {
+          const text = row.innerText.toLowerCase();
+          row.style.display = text.includes(query) ? '' : 'none';
+        });
+      });
+    }
 
   } catch (err) {
     container.innerHTML = `<div class="error-panel">Error loading payroll database.</div>`;
@@ -940,7 +1167,7 @@ async function renderSalarySlip(container) {
               <div class="slip-info-column">
                 <table>
                   <tr><td>Employee ID</td><td>: ${emp.employee_id}</td></tr>
-                  <tr><td>Full Name</td><td>: ${emp.full_name}</td></tr>
+                  <tr><td>Full Name</td><td>: [${emp.employee_id}] ${emp.full_name}</td></tr>
                   <tr><td>Job Title</td><td>: ${emp.position}</td></tr>
                   <tr><td>Department</td><td>: ${emp.department}</td></tr>
                 </table>
@@ -1014,7 +1241,7 @@ async function renderSalarySlip(container) {
         window.print();
       });
       document.getElementById('export-pdf-btn').addEventListener('click', () => {
-        window.print(); // Easy mock print is best
+        window.print(); 
       });
     };
 
@@ -1022,8 +1249,13 @@ async function renderSalarySlip(container) {
       <div class="fade-in salary-slip-view-container">
         <!-- Sidebar slip picker -->
         <div class="slip-selector-sidebar card">
-          <div class="card-header">
+          <div class="card-header" style="flex-direction: column; align-items: stretch; gap: 8px;">
             <h3 class="card-title">Select Payroll Slip</h3>
+            <!-- Search bar -->
+            <div class="search-input-wrapper" style="width: 100%; margin-bottom: 0;">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="slip-search-input" placeholder="Search by name/ID..." style="font-size: 0.8rem; padding: 6px 12px 6px 32px; margin-bottom: 0; width: 100%;">
+            </div>
           </div>
           <div class="slip-list-items" id="slip-sidebar-list">
             <!-- Populated dynamically -->
@@ -1048,7 +1280,7 @@ async function renderSalarySlip(container) {
         return `
           <div class="slip-list-card ${isActive ? 'active' : ''}" data-id="${sal.salary_id}">
             <div>
-              <div class="emp-name-bold" style="font-size: 0.85rem;">${emp ? emp.full_name : 'Unknown'}</div>
+              <div class="emp-name-bold" style="font-size: 0.85rem;">[${sal.employee_id}] ${emp ? emp.full_name : 'Unknown'}</div>
               <div style="font-size: 0.75rem; color: var(--text-secondary);">${sal.month} • Ref: ${sal.salary_id}</div>
             </div>
             <div style="font-weight: 700; font-size: 0.85rem; color: var(--accent-blue);">
@@ -1064,6 +1296,18 @@ async function renderSalarySlip(container) {
           renderSalarySlip(container);
         });
       });
+
+      // Bind search functionality
+      const searchInput = document.getElementById('slip-search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          const query = e.target.value.toLowerCase().trim();
+          document.querySelectorAll('.slip-list-card').forEach(card => {
+            const text = card.innerText.toLowerCase();
+            card.style.display = text.includes(query) ? 'flex' : 'none';
+          });
+        });
+      }
     }
 
     renderSlip();
@@ -1137,7 +1381,7 @@ async function renderReports(container) {
                   ${dbData.topEmployees.map(emp => `
                     <tr>
                       <td><code>${emp.employee_id}</code></td>
-                      <td><strong>${emp.full_name}</strong></td>
+                      <td><strong>[${emp.employee_id}] ${emp.full_name}</strong></td>
                       <td>${emp.position}</td>
                       <td>${emp.department}</td>
                       <td>${emp.attendanceRate}%</td>
@@ -1206,7 +1450,7 @@ async function renderTopPerformers(container) {
               <div class="podium-avatar-wrapper">
                 <img src="${second.photo}" class="podium-avatar" alt="Silver Avatar">
               </div>
-              <div class="podium-emp-name">${second.full_name}</div>
+              <div class="podium-emp-name">[${second.employee_id}] ${second.full_name}</div>
               <div class="podium-pedestal">
                 <div class="podium-rank-num">2</div>
                 <div class="podium-score">${second.productivityScore} pts</div>
@@ -1221,7 +1465,7 @@ async function renderTopPerformers(container) {
                 <i class="fa-solid fa-crown podium-crown"></i>
                 <img src="${first.photo}" class="podium-avatar" alt="Gold Avatar">
               </div>
-              <div class="podium-emp-name">${first.full_name}</div>
+              <div class="podium-emp-name">[${first.employee_id}] ${first.full_name}</div>
               <div class="podium-pedestal">
                 <div class="podium-rank-num">1</div>
                 <div class="podium-score">${first.productivityScore} pts</div>
@@ -1235,7 +1479,7 @@ async function renderTopPerformers(container) {
               <div class="podium-avatar-wrapper">
                 <img src="${third.photo}" class="podium-avatar" alt="Bronze Avatar">
               </div>
-              <div class="podium-emp-name">${third.full_name}</div>
+              <div class="podium-emp-name">[${third.employee_id}] ${third.full_name}</div>
               <div class="podium-pedestal">
                 <div class="podium-rank-num">3</div>
                 <div class="podium-score">${third.productivityScore} pts</div>
@@ -1271,7 +1515,7 @@ async function renderTopPerformers(container) {
                         <div class="table-avatar-cell">
                           <img src="${emp.photo}" class="table-avatar" alt="Avatar">
                           <div>
-                            <span class="emp-name-bold">${emp.full_name}</span>
+                            <span class="emp-name-bold">[${emp.employee_id}] ${emp.full_name}</span>
                             <div class="emp-id-sub">${emp.position}</div>
                           </div>
                         </div>
@@ -1440,12 +1684,22 @@ function openEmployeeForm(employeeId = null, employeesList = []) {
       document.getElementById('emp-department').value = emp.department;
       document.getElementById('emp-joining-date').value = emp.joining_date;
       document.getElementById('emp-monthly-salary').value = emp.monthly_salary;
+      document.getElementById('emp-phone').value = emp.phone || '';
+      document.getElementById('emp-email').value = emp.email || '';
+      document.getElementById('emp-address').value = emp.address || '';
+      document.getElementById('emp-dob').value = emp.dob || '';
+      document.getElementById('emp-gender').value = emp.gender || 'Male';
     }
   } else {
     title.textContent = 'Add New Employee';
     document.getElementById('emp-form-id').value = '';
     // Set default joining date to today
     document.getElementById('emp-joining-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('emp-phone').value = '';
+    document.getElementById('emp-email').value = '';
+    document.getElementById('emp-address').value = '';
+    document.getElementById('emp-dob').value = '';
+    document.getElementById('emp-gender').value = 'Male';
   }
   
   Modals.open('employee-modal');
@@ -1461,8 +1715,13 @@ async function submitEmployeeForm(e) {
   const department = document.getElementById('emp-department').value;
   const joining_date = document.getElementById('emp-joining-date').value;
   const monthly_salary = parseFloat(document.getElementById('emp-monthly-salary').value);
+  const phone = document.getElementById('emp-phone').value;
+  const email = document.getElementById('emp-email').value;
+  const address = document.getElementById('emp-address').value;
+  const dob = document.getElementById('emp-dob').value;
+  const gender = document.getElementById('emp-gender').value;
 
-  const payload = { full_name, photo, position, department, joining_date, monthly_salary };
+  const payload = { full_name, photo, position, department, joining_date, monthly_salary, phone, email, address, dob, gender };
 
   try {
     if (id) {
@@ -1492,20 +1751,152 @@ async function deleteEmployee(id) {
   }
 }
 
+// Autocomplete selector helper
+function initAutocomplete(inputId, hiddenId, suggestionsId, employeesList, onSelectCallback = null) {
+  const input = document.getElementById(inputId);
+  const hidden = document.getElementById(hiddenId);
+  const suggestions = document.getElementById(suggestionsId);
+  
+  if (!input || !hidden || !suggestions) return;
+  
+  const newInput = input.cloneNode(true);
+  input.parentNode.replaceChild(newInput, input);
+  
+  newInput.addEventListener('input', () => {
+    const val = newInput.value.toLowerCase().trim();
+    hidden.value = ''; 
+    
+    if (val.length === 0) {
+      suggestions.innerHTML = '';
+      suggestions.classList.add('hidden');
+      return;
+    }
+    
+    const matches = employeesList.filter(emp => 
+      emp.full_name.toLowerCase().includes(val) || 
+      emp.employee_id.toLowerCase().includes(val)
+    );
+    
+    if (matches.length === 0) {
+      suggestions.innerHTML = `<div class="autocomplete-suggestion no-results">No employees found</div>`;
+    } else {
+      suggestions.innerHTML = matches.map(emp => `
+        <div class="autocomplete-suggestion" data-id="${emp.employee_id}" data-name="[${emp.employee_id}] ${emp.full_name}">
+          <img src="${emp.photo}" class="suggestion-avatar" alt="Avatar">
+          <div class="suggestion-info">
+            <span class="suggestion-name">[${emp.employee_id}] ${emp.full_name}</span>
+            <span class="suggestion-role">${emp.position}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    suggestions.classList.remove('hidden');
+    
+    suggestions.querySelectorAll('.autocomplete-suggestion[data-id]').forEach(item => {
+      item.addEventListener('click', () => {
+        const empId = item.getAttribute('data-id');
+        const empName = item.getAttribute('data-name');
+        
+        hidden.value = empId;
+        newInput.value = empName;
+        
+        suggestions.innerHTML = '';
+        suggestions.classList.add('hidden');
+        
+        if (onSelectCallback) onSelectCallback(empId);
+      });
+    });
+  });
+  
+  document.addEventListener('click', (e) => {
+    if (!newInput.contains(e.target) && !suggestions.contains(e.target)) {
+      suggestions.classList.add('hidden');
+    }
+  });
+}
+
+function checkAttendanceDateLock() {
+  const dateInput = document.getElementById('att-date');
+  const submitBtn = document.querySelector('#attendance-form button[type="submit"]');
+  const statusRadios = document.querySelectorAll('input[name="att-status"]');
+  
+  if (!dateInput) return;
+  
+  const selectedDate = dateInput.value;
+  const todayStr = '2026-06-24';
+  
+  if (selectedDate < todayStr) {
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>Locked</span> <i class="fa-solid fa-lock"></i>`;
+    }
+    statusRadios.forEach(r => r.disabled = true);
+    
+    let warning = document.getElementById('att-lock-warning');
+    if (!warning) {
+      warning = document.createElement('div');
+      warning.id = 'att-lock-warning';
+      warning.className = 'error-message';
+      warning.style.marginTop = '10px';
+      warning.style.display = 'block';
+      warning.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Past dates are expired and locked.`;
+      dateInput.parentNode.appendChild(warning);
+    }
+  } else {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span>Submit Record</span>`;
+    }
+    statusRadios.forEach(r => r.disabled = false);
+    
+    const warning = document.getElementById('att-lock-warning');
+    if (warning) warning.remove();
+  }
+}
+
 // Open Attendance Modal
 function openAttendanceModal(employees) {
-  const select = document.getElementById('att-employee-select');
-  select.innerHTML = employees.map(e => `<option value="${e.employee_id}">${e.full_name} (${e.employee_id})</option>`).join('');
+  document.getElementById('att-employee-search-input').value = '';
+  document.getElementById('att-employee-id').value = '';
+  
+  initAutocomplete(
+    'att-employee-search-input',
+    'att-employee-id',
+    'att-employee-suggestions',
+    employees
+  );
+  
   document.getElementById('att-date').value = new Date().toISOString().split('T')[0];
+  document.querySelector('input[name="att-status"][value="Present"]').checked = true;
+  
+  checkAttendanceDateLock();
+  
+  const dateInput = document.getElementById('att-date');
+  // Remove duplicate change listeners if any
+  dateInput.removeEventListener('change', checkAttendanceDateLock);
+  dateInput.addEventListener('change', checkAttendanceDateLock);
+
   Modals.open('attendance-modal');
 }
 
 // Save Single Attendance Log
 async function submitAttendanceForm(e) {
   e.preventDefault();
-  const employee_id = document.getElementById('att-employee-select').value;
+  const employee_id = document.getElementById('att-employee-id').value;
   const date = document.getElementById('att-date').value;
   const status = document.querySelector('input[name="att-status"]:checked').value;
+
+  if (!employee_id) {
+    alert('Please search and select a valid employee.');
+    return;
+  }
+
+  const todayStr = '2026-06-24';
+  if (date < todayStr) {
+    alert('Failed to mark attendance: Past date attendance is locked.');
+    return;
+  }
 
   try {
     await apiCall('/api/attendance', 'POST', { employee_id, date, status });
@@ -1520,6 +1911,12 @@ async function submitAttendanceForm(e) {
 
 // Save Daily Bulk Attendance Records
 async function saveBulkAttendance() {
+  const todayStr = '2026-06-24';
+  if (selectedAttendanceDate < todayStr) {
+    alert('Failed to save bulk attendance: Past date records are locked.');
+    return;
+  }
+
   const records = [];
   document.querySelectorAll('.radio-group-container[data-employee]').forEach(container => {
     const employee_id = container.getAttribute('data-employee');
@@ -1539,8 +1936,16 @@ async function saveBulkAttendance() {
 
 // Open Overtime logging modal
 function openOvertimeModal(employees) {
-  const select = document.getElementById('ot-employee-select');
-  select.innerHTML = employees.map(e => `<option value="${e.employee_id}">${e.full_name} (${e.employee_id})</option>`).join('');
+  document.getElementById('ot-employee-search-input').value = '';
+  document.getElementById('ot-employee-id').value = '';
+  
+  initAutocomplete(
+    'ot-employee-search-input',
+    'ot-employee-id',
+    'ot-employee-suggestions',
+    employees
+  );
+
   document.getElementById('ot-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('ot-hours').value = 1;
   Modals.open('overtime-modal');
@@ -1549,9 +1954,14 @@ function openOvertimeModal(employees) {
 // Log Overtime Submitter
 async function submitOvertimeForm(e) {
   e.preventDefault();
-  const employee_id = document.getElementById('ot-employee-select').value;
+  const employee_id = document.getElementById('ot-employee-id').value;
   const date = document.getElementById('ot-date').value;
   const overtime_hours = parseFloat(document.getElementById('ot-hours').value);
+
+  if (!employee_id) {
+    alert('Please search and select a valid employee.');
+    return;
+  }
 
   try {
     await apiCall('/api/overtime', 'POST', { employee_id, date, overtime_hours });

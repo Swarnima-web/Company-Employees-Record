@@ -37,6 +37,7 @@ function initializeDb() {
     users: [
       { username: 'admin', password: 'admin123', role: 'admin', fullName: 'System Admin' },
       { username: 'hr', password: 'hr123', role: 'hr', fullName: 'HR Manager' },
+      { username: 'supervisor', password: 'supervisor123', role: 'supervisor', fullName: 'Shift Supervisor' },
       { username: 'accountant', password: 'accountant123', role: 'accountant', fullName: 'Company Accountant' }
     ],
     settings: {
@@ -53,7 +54,12 @@ function initializeDb() {
         position: 'Lead Software Engineer',
         department: 'Engineering',
         joining_date: '2024-01-15',
-        monthly_salary: 95000
+        monthly_salary: 95000,
+        phone: '+91 98765 43210',
+        email: 'sarah.chen@company.com',
+        address: 'Flat 402, Sea Green Apartments, Bandra West, Mumbai',
+        dob: '1992-08-24',
+        gender: 'Female'
       },
       {
         employee_id: 'EMP002',
@@ -62,7 +68,12 @@ function initializeDb() {
         position: 'HR Manager',
         department: 'Human Resources',
         joining_date: '2024-03-10',
-        monthly_salary: 75000
+        monthly_salary: 75000,
+        phone: '+91 98765 43211',
+        email: 'alex.t@company.com',
+        address: '12, Park Street, Kolkata',
+        dob: '1989-11-15',
+        gender: 'Male'
       },
       {
         employee_id: 'EMP003',
@@ -71,7 +82,12 @@ function initializeDb() {
         position: 'Financial Analyst',
         department: 'Finance',
         joining_date: '2024-06-01',
-        monthly_salary: 82000
+        monthly_salary: 82000,
+        phone: '+91 98765 43212',
+        email: 'michael.d@company.com',
+        address: 'Apartment 101, Prestige Heights, Bangalore',
+        dob: '1994-04-05',
+        gender: 'Male'
       },
       {
         employee_id: 'EMP004',
@@ -80,7 +96,12 @@ function initializeDb() {
         position: 'UX Designer',
         department: 'Product Design',
         joining_date: '2025-02-18',
-        monthly_salary: 68000
+        monthly_salary: 68000,
+        phone: '+91 98765 43213',
+        email: 'emily.chen@company.com',
+        address: 'Plot 45, Jubilee Hills, Hyderabad',
+        dob: '1996-01-20',
+        gender: 'Female'
       },
       {
         employee_id: 'EMP005',
@@ -89,7 +110,12 @@ function initializeDb() {
         position: 'Marketing Specialist',
         department: 'Marketing',
         joining_date: '2025-05-20',
-        monthly_salary: 58000
+        monthly_salary: 58000,
+        phone: '+91 98765 43214',
+        email: 'marcus.v@company.com',
+        address: 'House 89, Sector 15, Noida',
+        dob: '1991-05-18',
+        gender: 'Male'
       }
     ],
     attendance: [],
@@ -125,6 +151,8 @@ function initializeDb() {
         status = 'Absent';
       } else if (rand < 0.12) {
         status = 'Half Day';
+      } else if (rand < 0.18) {
+        status = 'Leave';
       }
 
       initialDb.attendance.push({
@@ -203,7 +231,12 @@ const db = {
         position: employeeData.position,
         department: employeeData.department,
         joining_date: employeeData.joining_date || new Date().toISOString().split('T')[0],
-        monthly_salary: parseFloat(employeeData.monthly_salary) || 0
+        monthly_salary: parseFloat(employeeData.monthly_salary) || 0,
+        phone: employeeData.phone || '',
+        email: employeeData.email || '',
+        address: employeeData.address || '',
+        dob: employeeData.dob || '',
+        gender: employeeData.gender || 'Male'
       };
 
       data.employees.push(newEmp);
@@ -222,7 +255,12 @@ const db = {
         position: employeeData.position,
         department: employeeData.department,
         joining_date: employeeData.joining_date,
-        monthly_salary: parseFloat(employeeData.monthly_salary) || 0
+        monthly_salary: parseFloat(employeeData.monthly_salary) || 0,
+        phone: employeeData.phone || '',
+        email: employeeData.email || '',
+        address: employeeData.address || '',
+        dob: employeeData.dob || '',
+        gender: employeeData.gender || 'Male'
       };
 
       writeDb(data);
@@ -254,6 +292,11 @@ const db = {
       return data.attendance.filter(a => a.date === dateStr);
     },
     mark: (employeeId, dateStr, status) => {
+      const todayStr = '2026-06-24';
+      if (dateStr < todayStr) {
+        throw new Error('Attendance records for past dates are locked and cannot be modified.');
+      }
+      
       const data = readDb();
       
       // Validate employee
@@ -285,6 +328,11 @@ const db = {
       return record;
     },
     bulkMark: (dateStr, records) => {
+      const todayStr = '2026-06-24';
+      if (dateStr < todayStr) {
+        throw new Error('Attendance records for past dates are locked and cannot be modified.');
+      }
+
       // records: [{ employee_id: '...', status: '...' }]
       const data = readDb();
       const updatedRecords = [];
