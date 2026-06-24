@@ -100,6 +100,7 @@ function navigate(pageId) {
   }
 
   state.activePage = pageId;
+  document.body.setAttribute('data-active-page', pageId);
   
   // Update sidebar active link
   document.querySelectorAll('.menu-item').forEach(item => {

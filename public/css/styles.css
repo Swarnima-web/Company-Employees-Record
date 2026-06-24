@@ -1297,13 +1297,43 @@ button, input, select, textarea {
 
 /* Printable CSS overrides */
 @media print {
+  /* Force light theme colors for printing to save ink and look professional */
+  :root {
+    --bg-primary: #FFFFFF !important;
+    --bg-secondary: #FFFFFF !important;
+    --bg-tertiary: #F3F4F6 !important;
+    --text-primary: #111827 !important;
+    --text-secondary: #4B5563 !important;
+    --border-color: #E5E7EB !important;
+    --table-header-bg: #F9FAFB !important;
+    --table-hover-bg: #F3F4F6 !important;
+  }
+
+  body {
+    background-color: #FFFFFF !important;
+    color: #111827 !important;
+  }
+
+  /* Force white background for dark mode cards during printing */
+  [data-theme="dark"] .card {
+    background: #FFFFFF !important;
+    border: 1px solid #E5E7EB !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
   body * {
     visibility: hidden;
   }
-  .slip-document-card, .slip-document-card * {
+
+  /* When printing from salary-slip page, show only the payslip document */
+  body[data-active-page="salary-slip"] .slip-document-card,
+  body[data-active-page="salary-slip"] .slip-document-card * {
     visibility: visible;
   }
-  .slip-document-card {
+
+  body[data-active-page="salary-slip"] .slip-document-card {
     position: absolute;
     left: 0;
     top: 0;
@@ -1312,6 +1342,31 @@ button, input, select, textarea {
     box-shadow: none;
     padding: 0;
     margin: 0;
+  }
+
+  /* When printing from reports page, show the reports main content area */
+  body[data-active-page="reports"] .main-content,
+  body[data-active-page="reports"] .main-content * {
+    visibility: visible;
+  }
+
+  /* Hide navigation controls, sidebar collapse, and export/print buttons from printed report */
+  body[data-active-page="reports"] .top-header,
+  body[data-active-page="reports"] .top-header *,
+  body[data-active-page="reports"] .controls-panel,
+  body[data-active-page="reports"] .controls-panel * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body[data-active-page="reports"] .main-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    background: none !important;
   }
 }
 
