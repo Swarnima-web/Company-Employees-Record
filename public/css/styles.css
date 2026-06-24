@@ -3,11 +3,11 @@
    ========================================== */
 :root {
   /* Common Colors */
-  --primary-color: #0F172A;
-  --primary-hover: #1E293B;
-  --accent-cyan: #B76E79;
-  --accent-cyan-hover: #D4A5A5;
-  --accent-blue: #B76E79;
+  --primary-color: #2D0A10;
+  --primary-hover: #3F141C;
+  --accent-cyan: #D4AF37;
+  --accent-cyan-hover: #DFBA73;
+  --accent-blue: #D4AF37;
   
   --success-color: #10B981;
   --success-bg: rgba(16, 185, 129, 0.1);
@@ -19,7 +19,7 @@
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-glow: 0 0 15px rgba(183, 110, 121, 0.35);
+  --shadow-glow: 0 0 15px rgba(212, 175, 55, 0.35);
 
   --font-family: 'Inter', sans-serif;
   --sidebar-width: 260px;
@@ -33,28 +33,28 @@
 
 /* Light Theme Variables */
 [data-theme="light"] {
-  --bg-primary: #FAF6F6;
+  --bg-primary: #FDFBF7;
   --bg-secondary: #FFFFFF;
-  --bg-tertiary: #F3EBEB;
-  --text-primary: #0F172A;
-  --text-secondary: #5C5252;
-  --border-color: #E6D7D7;
-  --card-glow: rgba(183, 110, 121, 0.08);
-  --table-header-bg: #FAF6F6;
-  --table-hover-bg: #F5EEEE;
+  --bg-tertiary: #F7F2E8;
+  --text-primary: #2D0A10;
+  --text-secondary: #7A6A5E;
+  --border-color: #EADEC9;
+  --card-glow: rgba(212, 175, 55, 0.08);
+  --table-header-bg: #FAF5EB;
+  --table-hover-bg: #FDF8F0;
 }
 
 /* Dark Theme Variables */
 [data-theme="dark"] {
-  --bg-primary: #121212;
-  --bg-secondary: #1E293B;
-  --bg-tertiary: #0F172A;
-  --text-primary: #F8FAFC;
-  --text-secondary: #CBD5E1;
-  --border-color: #334155;
-  --card-glow: rgba(183, 110, 121, 0.15);
-  --table-header-bg: #0F172A;
-  --table-hover-bg: #1E293B;
+  --bg-primary: #150506;
+  --bg-secondary: #230B0E;
+  --bg-tertiary: #1E0709;
+  --text-primary: #FAF2EE;
+  --text-secondary: #D1C0C1;
+  --border-color: #411A1F;
+  --card-glow: rgba(212, 175, 55, 0.15);
+  --table-header-bg: #1E0709;
+  --table-hover-bg: #2C1114;
 }
 
 /* ==========================================

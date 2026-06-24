@@ -22,16 +22,16 @@ const UIComponents = {
             label: 'Monthly Salary Expense By Dept',
             data: values,
             backgroundColor: [
-              'rgba(183, 110, 121, 0.75)',  // Primary Accent Rose Gold
-              'rgba(212, 165, 165, 0.75)',  // Secondary Accent Soft Rose
+              'rgba(212, 175, 55, 0.75)',   // Primary Accent Gold
+              'rgba(223, 186, 115, 0.75)',  // Secondary Accent Soft Gold
               'rgba(16, 185, 129, 0.75)',   // Emerald Green
               'rgba(245, 158, 11, 0.75)',   // Warning Gold
               'rgba(239, 68, 68, 0.75)',    // Coral Red
               'rgba(113, 128, 150, 0.75)'   // Slate Neutral
             ],
             borderColor: [
-              '#B76E79',
-              '#D4A5A5',
+              '#D4AF37',
+              '#DFBA73',
               '#10B981',
               '#F59E0B',
               '#EF4444',
@@ -125,12 +125,12 @@ const UIComponents = {
           datasets: [{
             label: 'Total OT Hours Worked',
             data: values,
-            borderColor: '#B76E79',
-            backgroundColor: 'rgba(183, 110, 121, 0.1)',
+            borderColor: '#D4AF37',
+            backgroundColor: 'rgba(212, 175, 55, 0.1)',
             fill: true,
             tension: 0.35,
             borderWidth: 3,
-            pointBackgroundColor: '#D4A5A5',
+            pointBackgroundColor: '#DFBA73',
             pointBorderColor: '#FFFFFF',
             pointBorderWidth: 1.5,
             pointRadius: 4,
