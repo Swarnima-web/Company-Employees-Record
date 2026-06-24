@@ -559,6 +559,7 @@ async function renderEmployees(container) {
                 <div class="profile-card-header">
                   <span class="badge badge-neutral">Index: ${scoreMap[emp.employee_id] || 100}</span>
                   <div style="margin-left: auto; display: flex; gap: 6px;">
+                    <button class="action-icon-btn view-ath-btn" data-id="${emp.employee_id}" title="View Attendance History"><i class="fa-solid fa-clock-rotate-left"></i></button>
                     <button class="action-icon-btn edit-emp-btn" data-id="${emp.employee_id}"><i class="fa-solid fa-pen-to-square"></i></button>
                     <button class="action-icon-btn delete delete-emp-btn" data-id="${emp.employee_id}"><i class="fa-solid fa-trash-can"></i></button>
                   </div>
@@ -675,6 +676,7 @@ async function renderEmployees(container) {
                       </div>
                     </td>
                     <td style="text-align: right;">
+                      <button class="action-icon-btn view-ath-btn" data-id="${emp.employee_id}" title="View Attendance History"><i class="fa-solid fa-clock-rotate-left"></i></button>
                       <button class="action-icon-btn edit-emp-btn" data-id="${emp.employee_id}"><i class="fa-solid fa-pen-to-square"></i></button>
                       <button class="action-icon-btn delete delete-emp-btn" data-id="${emp.employee_id}"><i class="fa-solid fa-trash-can"></i></button>
                     </td>
@@ -692,6 +694,9 @@ async function renderEmployees(container) {
       });
       document.querySelectorAll('.delete-emp-btn').forEach(btn => {
         btn.addEventListener('click', () => deleteEmployee(btn.getAttribute('data-id')));
+      });
+      document.querySelectorAll('.view-ath-btn').forEach(btn => {
+        btn.addEventListener('click', () => openAttendanceHistoryModal(btn.getAttribute('data-id')));
       });
     };
 
@@ -830,9 +835,12 @@ async function renderAttendance(container) {
                     return `
                       <tr>
                         <td>
-                          <div class="table-avatar-cell">
-                            <img src="${emp.photo}" class="table-avatar" alt="Avatar">
-                            <span class="emp-name-bold">[${emp.employee_id}] ${emp.full_name}</span>
+                          <div class="table-avatar-cell" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                              <img src="${emp.photo}" class="table-avatar" alt="Avatar">
+                              <span class="emp-name-bold">[${emp.employee_id}] ${emp.full_name}</span>
+                            </div>
+                            <button class="btn btn-outline view-ath-btn" data-id="${emp.employee_id}" style="padding: 4px 8px; font-size: 0.75rem; height: auto; display: flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); color: var(--text-secondary); background: none; cursor: pointer;" title="View History"><i class="fa-solid fa-clock-rotate-left"></i> History</button>
                           </div>
                         </td>
                         <td><code>${emp.employee_id}</code></td>
@@ -921,6 +929,13 @@ async function renderAttendance(container) {
     }
 
     renderContents();
+
+    // Bind attendance history buttons
+    document.querySelectorAll('.view-ath-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openAttendanceHistoryModal(btn.getAttribute('data-id'));
+      });
+    });
 
     // Bind local search if in sheet view
     const searchInput = document.getElementById('att-search-input');
@@ -2197,6 +2212,313 @@ document.addEventListener('DOMContentLoaded', () => {
       navigate(hash);
     } else {
       navigate('dashboard');
+    }
+  }
+
+  // Employee Attendance History & Verification Modal Handler
+  async function openAttendanceHistoryModal(employeeId) {
+    try {
+      const modal = document.getElementById('attendance-history-modal');
+      if (!modal) return;
+      
+      // Fetch fresh database records
+      const employees = await apiCall('/api/employees');
+      const allAttendance = await apiCall('/api/attendance');
+      const allOvertime = await apiCall('/api/overtime');
+      const settings = await apiCall('/api/settings');
+
+      const emp = employees.find(e => e.employee_id === employeeId);
+      if (!emp) {
+        alert("Employee not found!");
+        return;
+      }
+
+      // Set employee details header
+      document.getElementById('ath-emp-photo').src = emp.photo || 'assets/avatar_placeholder.png';
+      document.getElementById('ath-emp-name').textContent = `[${emp.employee_id}] ${emp.full_name}`;
+      document.getElementById('ath-emp-details').textContent = `${emp.position} • ${emp.department} • Joined ${formatDateToDDMMYYYY(emp.joining_date)}`;
+
+      // Set up filter range defaults
+      const presetSelect = document.getElementById('ath-filter-preset');
+      const customDatesDiv = document.getElementById('ath-custom-dates');
+      const startDateInput = document.getElementById('ath-start-date');
+      const endDateInput = document.getElementById('ath-end-date');
+      const toggleTimeline = document.getElementById('ath-toggle-timeline');
+
+      const todayStr = '2026-06-24';
+      startDateInput.value = '2026-06-01';
+      endDateInput.value = '2026-06-30';
+
+      // Helper: calculate start and end date based on preset
+      const getRangeDates = () => {
+        const preset = presetSelect.value;
+        let start = '';
+        let end = '';
+
+        if (preset === 'today') {
+          start = todayStr;
+          end = todayStr;
+        } else if (preset === 'week') {
+          // Week of June 24, 2026: June 22 to June 28
+          start = '2026-06-22';
+          end = '2026-06-28';
+        } else if (preset === 'month') {
+          start = '2026-06-01';
+          end = '2026-06-30';
+        } else if (preset === 'custom') {
+          start = startDateInput.value;
+          end = endDateInput.value;
+        } else {
+          // "all" - earliest attendance date in DB to today
+          const dates = allAttendance.map(a => a.date).sort();
+          start = dates.length > 0 ? dates[0] : '2026-06-01';
+          end = todayStr;
+        }
+        return { start, end };
+      };
+
+      // Main render function for modal content
+      const renderModalContent = async () => {
+        const { start, end } = getRangeDates();
+        
+        // Filter employee records in date range
+        const empAtt = allAttendance.filter(a => a.employee_id === employeeId && (!start || a.date >= start) && (!end || a.date <= end));
+        const empOt = allOvertime.filter(o => o.employee_id === employeeId && (!start || o.date >= start) && (!end || o.date <= end));
+
+        // Calculate stats
+        const counts = { Present: 0, 'Half Day': 0, Leave: 0, Absent: 0 };
+        empAtt.forEach(a => {
+          if (counts[a.status] !== undefined) {
+            counts[a.status]++;
+          }
+        });
+        const otHours = empOt.reduce((sum, o) => sum + o.overtime_hours, 0);
+
+        // Render stats badges
+        document.getElementById('ath-stat-present').textContent = counts['Present'];
+        document.getElementById('ath-stat-halfday').textContent = counts['Half Day'];
+        document.getElementById('ath-stat-leave').textContent = counts['Leave'];
+        document.getElementById('ath-stat-absent').textContent = counts['Absent'];
+        document.getElementById('ath-stat-ot').textContent = `${otHours} hrs`;
+
+        // Get list of all dates in the range to display date-wise
+        let datesToRender = [];
+        if (start && end) {
+          // Generate list of dates between start and end
+          let current = new Date(start);
+          const last = new Date(end);
+          while (current <= last) {
+            datesToRender.push(current.toISOString().split('T')[0]);
+            current.setDate(current.getDate() + 1);
+          }
+        } else {
+          // Fallback: list all dates present in the employee's attendance
+          datesToRender = [...new Set(empAtt.map(a => a.date))].sort();
+        }
+        // Sort dates descending (newest first)
+        datesToRender.reverse();
+
+        const container = document.getElementById('ath-records-container');
+        const isTimeline = toggleTimeline.checked;
+        const allowedToEdit = rolePages[state.user.role]?.includes('attendance');
+
+        if (isTimeline) {
+          // Timeline View
+          if (datesToRender.length === 0) {
+            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-secondary);">No records found in this period.</div>`;
+            return;
+          }
+
+          container.innerHTML = `
+            <div class="ath-timeline" style="padding: 16px 24px;">
+              ${datesToRender.map(dateStr => {
+                const att = empAtt.find(a => a.date === dateStr);
+                const ot = empOt.find(o => o.date === dateStr);
+                const status = att ? att.status : 'Not Marked';
+                
+                let markerClass = 'notmarked';
+                let statusBadge = `<span class="badge badge-neutral">Not Marked</span>`;
+                if (status === 'Present') { markerClass = 'present'; statusBadge = `<span class="badge badge-present">Present</span>`; }
+                else if (status === 'Half Day') { markerClass = 'halfday'; statusBadge = `<span class="badge badge-halfday">Half Day</span>`; }
+                else if (status === 'Leave') { markerClass = 'leave'; statusBadge = `<span class="badge badge-leave">Leave</span>`; }
+                else if (status === 'Absent') { markerClass = 'absent'; statusBadge = `<span class="badge badge-absent">Absent</span>`; }
+
+                const otBadge = ot ? `<span class="ath-timeline-ot"><i class="fa-solid fa-clock"></i> +${ot.overtime_hours} hrs OT</span>` : '';
+
+                const isLocked = dateStr < todayStr;
+
+                // Render inline editor dropdown if allowed and not locked
+                let editSection = '';
+                if (allowedToEdit && !isLocked) {
+                  editSection = `
+                    <select class="ath-inline-status form-control" data-date="${dateStr}" style="height: 30px; font-size: 0.8rem; padding: 2px 4px; margin: 0; width: 110px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: var(--border-radius-sm);">
+                      <option value="Present" ${status === 'Present' ? 'selected' : ''}>Present</option>
+                      <option value="Half Day" ${status === 'Half Day' ? 'selected' : ''}>Half Day</option>
+                      <option value="Leave" ${status === 'Leave' ? 'selected' : ''}>Leave</option>
+                      <option value="Absent" ${status === 'Absent' ? 'selected' : ''}>Absent</option>
+                      <option value="Not Marked" ${status === 'Not Marked' ? 'selected' : ''}>Not Marked</option>
+                    </select>
+                  `;
+                } else {
+                  editSection = statusBadge;
+                }
+
+                return `
+                  <div class="ath-timeline-item">
+                    <div class="ath-timeline-marker ${markerClass}"></div>
+                    <div class="ath-timeline-content">
+                      <span class="ath-timeline-date">${formatDateToDDMMYYYY(dateStr)} (${new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' })})</span>
+                      <div class="ath-timeline-info">
+                        ${otBadge}
+                        ${editSection}
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        } else {
+          // Table View
+          if (datesToRender.length === 0) {
+            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-secondary);">No records found in this period.</div>`;
+            return;
+          }
+
+          container.innerHTML = `
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Day</th>
+                  <th>Status</th>
+                  <th>Overtime</th>
+                  <th style="text-align: right;">Verification / Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${datesToRender.map(dateStr => {
+                  const att = empAtt.find(a => a.date === dateStr);
+                  const ot = empOt.find(o => o.date === dateStr);
+                  const status = att ? att.status : 'Not Marked';
+                  
+                  let statusBadge = `<span class="badge badge-neutral">Not Marked</span>`;
+                  if (status === 'Present') statusBadge = `<span class="badge badge-present">Present</span>`;
+                  else if (status === 'Half Day') statusBadge = `<span class="badge badge-halfday">Half Day</span>`;
+                  else if (status === 'Leave') statusBadge = `<span class="badge badge-leave">Leave</span>`;
+                  else if (status === 'Absent') statusBadge = `<span class="badge badge-absent">Absent</span>`;
+
+                  const otText = ot ? `<code>${ot.overtime_hours} hrs</code>` : '-';
+                  const isLocked = dateStr < todayStr;
+
+                  let actionHtml = '';
+                  if (allowedToEdit && !isLocked) {
+                    actionHtml = `
+                      <select class="ath-inline-status form-control" data-date="${dateStr}" style="height: 30px; font-size: 0.8rem; padding: 2px 4px; margin: 0; width: 120px; display: inline-block; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: var(--border-radius-sm);">
+                        <option value="Present" ${status === 'Present' ? 'selected' : ''}>Present</option>
+                        <option value="Half Day" ${status === 'Half Day' ? 'selected' : ''}>Half Day</option>
+                        <option value="Leave" ${status === 'Leave' ? 'selected' : ''}>Leave</option>
+                        <option value="Absent" ${status === 'Absent' ? 'selected' : ''}>Absent</option>
+                        <option value="Not Marked" ${status === 'Not Marked' ? 'selected' : ''}>Not Marked</option>
+                      </select>
+                    `;
+                  } else {
+                    actionHtml = isLocked ? `
+                      <span style="font-size: 0.75rem; color: var(--text-secondary);"><i class="fa-solid fa-lock"></i> Locked</span>
+                    ` : `
+                      <span style="font-size: 0.75rem; color: var(--text-secondary);"><i class="fa-solid fa-eye"></i> Read-only</span>
+                    `;
+                  }
+
+                  return `
+                    <tr>
+                      <td><strong>${formatDateToDDMMYYYY(dateStr)}</strong></td>
+                      <td>${new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long' })}</td>
+                      <td>${statusBadge}</td>
+                      <td>${otText}</td>
+                      <td style="text-align: right;">${actionHtml}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+
+        // Bind events to newly created dropdowns
+        document.querySelectorAll('.ath-inline-status').forEach(select => {
+          select.addEventListener('change', async (e) => {
+            const date = e.target.getAttribute('data-date');
+            const newStatus = e.target.value;
+
+            try {
+              await apiCall('/api/attendance', 'POST', { employee_id: employeeId, date, status: newStatus });
+              
+              // Re-fetch all attendance to refresh locally
+              const updatedAttendance = await apiCall('/api/attendance');
+              allAttendance.length = 0;
+              allAttendance.push(...updatedAttendance);
+
+              // Re-render the modal content to refresh statistics and view
+              renderModalContent();
+
+              // Also trigger refresh of parent view pages if they exist
+              const activePage = window.location.hash.replace('#', '') || 'dashboard';
+              const pageContainer = document.getElementById('view-content');
+              if (activePage === 'employees') {
+                renderEmployees(pageContainer);
+              } else if (activePage === 'attendance') {
+                renderAttendance(pageContainer);
+              } else if (activePage === 'dashboard') {
+                renderDashboard(pageContainer);
+              }
+            } catch (err) {
+              alert('Failed to verify/update attendance: ' + err.message);
+              renderModalContent(); // Rollback select value
+            }
+          });
+        });
+      };
+
+      // Preset Select change handler
+      presetSelect.onchange = () => {
+        if (presetSelect.value === 'custom') {
+          customDatesDiv.style.display = 'flex';
+        } else {
+          customDatesDiv.style.display = 'none';
+        }
+        renderModalContent();
+      };
+
+      // Custom Date Range change handlers
+      startDateInput.onchange = renderModalContent;
+      endDateInput.onchange = renderModalContent;
+      toggleTimeline.onchange = renderModalContent;
+
+      // Close button triggers
+      const closeModal = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('show');
+      };
+
+      document.getElementById('ath-close-btn').onclick = closeModal;
+      document.getElementById('ath-close-footer-btn').onclick = closeModal;
+
+      // Show Modal
+      modal.classList.remove('hidden');
+      modal.offsetWidth; // browser reflow
+      modal.classList.add('show');
+
+      // Run initial render
+      if (presetSelect.value === 'custom') {
+        customDatesDiv.style.display = 'flex';
+      } else {
+        customDatesDiv.style.display = 'none';
+      }
+      renderModalContent();
+
+    } catch (err) {
+      alert("Error rendering attendance record: " + err.message);
     }
   }
 });

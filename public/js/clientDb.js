@@ -345,7 +345,12 @@
       );
 
       let record;
-      if (recordIndex !== -1) {
+      if (status === 'Not Marked') {
+        if (recordIndex !== -1) {
+          db.attendance.splice(recordIndex, 1);
+        }
+        record = { employee_id: employee_id, date, status: 'Not Marked' };
+      } else if (recordIndex !== -1) {
         db.attendance[recordIndex].status = status;
         record = db.attendance[recordIndex];
       } else {
